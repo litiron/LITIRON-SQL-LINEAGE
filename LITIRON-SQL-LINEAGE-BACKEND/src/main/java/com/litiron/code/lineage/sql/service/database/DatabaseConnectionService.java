@@ -1,10 +1,8 @@
 package com.litiron.code.lineage.sql.service.database;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.litiron.code.lineage.sql.entity.database.DatabaseConnectionEntity;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @description: 数据库连接Service
@@ -19,7 +17,7 @@ public interface DatabaseConnectionService {
      * @author: 李日红
      * @create: 2024/12/1 14:18
      */
-    List<DatabaseConnectionEntity> getDatabaseConnectionInfo();
+    List<DatabaseConnectionEntity> getaAllDatabaseConnectionInfo();
 
     /**
      * @description: 根据id获取连接信息
@@ -31,12 +29,19 @@ public interface DatabaseConnectionService {
     DatabaseConnectionEntity getDatabaseConnectionInfoById(String id);
 
     /**
-     * @description: 获取表内容信息
-     * @param: page 分页参数
-     * @param: tableName 表名
-     * @return: com.baomidou.mybatisplus.core.metadata.IPage<java.util.Map < java.lang.String, java.lang.Object>>
+     * @description: 根据数据库类型获取数据库连接信息
+     * @param: type  数据库类型
+     * @return: java.util.List<com.litiron.code.lineage.sql.entity.database.DatabaseConnectionEntity>
      * @author: 李日红
-     * @create: 2024/12/7 13:35
+     * @create: 2025/2/8 17:36
      */
-    IPage<Map<String, Object>> retrieveTableDetails(IPage<Map<String, Object>> page, String tableName);
+    List<DatabaseConnectionEntity> getDatabaseConnectionInfoByType(String type);
+
+    /**
+     * @description: 获取所有数据库类型
+     * @return: java.util.List<java.lang.String>
+     * @author: 李日红
+     * @create: 2025/2/8 20:40
+     */
+    List<String> getAllDatabaseType();
 }

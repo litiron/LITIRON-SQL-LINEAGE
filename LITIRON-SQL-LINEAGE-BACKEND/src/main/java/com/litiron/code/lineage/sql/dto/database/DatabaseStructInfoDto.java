@@ -12,7 +12,7 @@ import java.util.List;
  */
 @Getter
 @Setter
-public class SchemaStructInfoDto {
-    String schemaName;
+public class DatabaseStructInfoDto {
+    String databaseName;
     List<TableStructureInfoDto> tableStructureInfoDtoList;
 }

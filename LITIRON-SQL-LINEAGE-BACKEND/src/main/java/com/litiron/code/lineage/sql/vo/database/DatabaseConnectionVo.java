@@ -13,5 +13,5 @@ import lombok.Setter;
 public class DatabaseConnectionVo {
     private Integer id;
     private String connectionName;
-
+    private String type;
 }

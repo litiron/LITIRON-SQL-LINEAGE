@@ -5,11 +5,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.litiron.code.lineage.sql.bo.database.QueryTableDetailsParamsBo;
 import com.litiron.code.lineage.sql.common.Rest;
 import com.litiron.code.lineage.sql.dto.database.DatabaseConnectionDto;
+import com.litiron.code.lineage.sql.dto.database.DatabaseStructInfoDto;
 import com.litiron.code.lineage.sql.dto.database.QueryTableDetailsParamsDto;
-import com.litiron.code.lineage.sql.dto.database.SchemaStructInfoDto;
 import com.litiron.code.lineage.sql.service.DatabaseComplexService;
 import com.litiron.code.lineage.sql.vo.database.DatabaseConnectionVo;
-import com.litiron.code.lineage.sql.vo.database.SchemaStructInfoVo;
+import com.litiron.code.lineage.sql.vo.database.DatabaseStructInfoVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -35,12 +35,18 @@ public class DatabaseController {
         return Rest.success(connectionVos);
     }
 
+    @GetMapping("/retrieve/pgDbs")
+    public Rest<List<String>> retrievePgDatabasesInfo(@RequestParam(value = "id") String id) {
+        List<String> pgDbList = databaseComplexService.retrievePgDatabasesInfo(id);
+        return Rest.success(pgDbList);
+    }
+
     @GetMapping("/connection/update")
-    public Rest<?> updateDatabaseConnection(@RequestParam(value = "id") String id) {
+    public Rest<?> updateDatabaseConnection(@RequestParam(value = "id") String id, @RequestParam(value = "pgDbName", defaultValue = "", required = false) String pgDbName) {
         try {
-            List<SchemaStructInfoDto> schemaStructInfoDtos = databaseComplexService.updateDatabaseConnection(id);
-            List<SchemaStructInfoVo> schemaStructInfoVos = BeanUtil.copyToList(schemaStructInfoDtos, SchemaStructInfoVo.class);
-            return Rest.success(schemaStructInfoVos);
+            List<DatabaseStructInfoDto> databaseStructInfoDtos = databaseComplexService.updateDatabaseConnection(id, pgDbName);
+            List<DatabaseStructInfoVo> databaseStructInfoVos = BeanUtil.copyToList(databaseStructInfoDtos, DatabaseStructInfoVo.class);
+            return Rest.success(databaseStructInfoVos);
         } catch (Exception e) {
             log.error("Update database connection error,id is {}", id, e);
         }

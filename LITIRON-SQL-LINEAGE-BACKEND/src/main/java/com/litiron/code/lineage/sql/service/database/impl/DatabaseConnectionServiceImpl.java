@@ -2,17 +2,14 @@ package com.litiron.code.lineage.sql.service.database.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.litiron.code.lineage.sql.dao.DatabaseConnectionRepository;
-import com.litiron.code.lineage.sql.dao.DatabaseDynamicRepository;
 import com.litiron.code.lineage.sql.entity.database.DatabaseConnectionEntity;
 import com.litiron.code.lineage.sql.service.database.DatabaseConnectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author 李日红
@@ -22,12 +19,9 @@ import java.util.Map;
 @Service
 public class DatabaseConnectionServiceImpl implements DatabaseConnectionService {
     private DatabaseConnectionRepository databaseConnectionRepository;
-    private DatabaseDynamicRepository databaseDynamicRepository;
 
     @Override
-    public List<DatabaseConnectionEntity> getDatabaseConnectionInfo() {
-        Page<DatabaseConnectionEntity> databaseConnectionEntityPage = databaseConnectionRepository.selectPage(new Page<>(1, 10), new LambdaQueryWrapper<>());
-
+    public List<DatabaseConnectionEntity> getaAllDatabaseConnectionInfo() {
         return databaseConnectionRepository.selectList(new QueryWrapper<>());
     }
 
@@ -37,18 +31,20 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
     }
 
     @Override
-    public IPage<Map<String, Object>> retrieveTableDetails(IPage<Map<String, Object>> page, String tableName) {
-        return databaseDynamicRepository.retrieveTableDetails(page, tableName);
+    public List<DatabaseConnectionEntity> getDatabaseConnectionInfoByType(String type) {
+        return databaseConnectionRepository.selectList(new LambdaQueryWrapper<DatabaseConnectionEntity>().eq(DatabaseConnectionEntity::getType, type));
+    }
+
+    @Override
+    public List<String> getAllDatabaseType() {
+        return databaseConnectionRepository.selectList(new LambdaQueryWrapper<DatabaseConnectionEntity>()
+                        .select(DatabaseConnectionEntity::getType).groupBy(DatabaseConnectionEntity::getType))
+                .stream().map(DatabaseConnectionEntity::getType).collect(Collectors.toList());
     }
 
     @Autowired
     public void setDatabaseConnectionRepository(DatabaseConnectionRepository databaseConnectionRepository) {
         this.databaseConnectionRepository = databaseConnectionRepository;
-    }
-
-    @Autowired
-    public void setDatabaseDynamicRepository(DatabaseDynamicRepository databaseDynamicRepository) {
-        this.databaseDynamicRepository = databaseDynamicRepository;
     }
 
 }

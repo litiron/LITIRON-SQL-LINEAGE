@@ -10,6 +10,7 @@ import com.litiron.code.lineage.sql.holder.DBContextHolder;
 import com.litiron.code.lineage.sql.holder.DynamicDataSource;
 import com.litiron.code.lineage.sql.service.DatabaseComplexService;
 import com.litiron.code.lineage.sql.service.database.DatabaseConnectionService;
+import com.litiron.code.lineage.sql.service.database.DatabaseDynamicService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,83 +30,89 @@ import java.util.Map;
 @Slf4j
 public class DatabaseComplexServiceImpl implements DatabaseComplexService {
     private DatabaseConnectionService databaseConnectionService;
+
+    private DatabaseDynamicService databaseDynamicService;
     private DynamicDataSource dynamicDataSource;
 
     @Override
     public List<DatabaseConnectionDto> retrieveDatabaseConnectionInfo() {
-        List<DatabaseConnectionEntity> databaseConnectionEntities = databaseConnectionService.getDatabaseConnectionInfo();
-
+        List<DatabaseConnectionEntity> databaseConnectionEntities = databaseConnectionService.getaAllDatabaseConnectionInfo();
         return BeanUtil.copyToList(databaseConnectionEntities, DatabaseConnectionDto.class);
     }
 
-
     @Override
-    public List<SchemaStructInfoDto> updateDatabaseConnection(String id) {
+    public List<DatabaseStructInfoDto> updateDatabaseConnection(String id,String pgDbName) {
         DatabaseConnectionEntity testConnectionEntity = databaseConnectionService.getDatabaseConnectionInfoById(id);
-        DatabaseMetaData metaData = dynamicDataSource.createDataSourceWithCheck(testConnectionEntity);
-        List<SchemaStructInfoDto> schemaStructInfos = retrieveSchemaStructInfo(metaData, testConnectionEntity.getType());
+        DatabaseMetaData metaData = dynamicDataSource.createDataSourceWithCheck(testConnectionEntity,pgDbName);
+        List<DatabaseStructInfoDto> databaseStructInfos = retrieveDatabaseStructInfo(metaData, testConnectionEntity.getType());
         DBContextHolder.setDataSource(id);
         DBContextHolder.clearDataSource();
-        return schemaStructInfos;
+        return databaseStructInfos;
     }
 
     @Override
     public IPage<Map<String, Object>> retrieveTableDetails(QueryTableDetailsParamsDto queryTableDetailsParamsDto) {
         DBContextHolder.setDataSource(queryTableDetailsParamsDto.getConnectionId());
         IPage<Map<String, Object>> page = new Page<>(queryTableDetailsParamsDto.getPageNumber(), queryTableDetailsParamsDto.getPageSize());
-        IPage<Map<String, Object>> tableDetails = databaseConnectionService.retrieveTableDetails(page, queryTableDetailsParamsDto.getTableName());
+        IPage<Map<String, Object>> tableDetails = databaseDynamicService.retrieveTableDetails(page, queryTableDetailsParamsDto.getTableName());
         DBContextHolder.clearDataSource();
         return tableDetails;
     }
 
-    private List<SchemaStructInfoDto> retrieveSchemaStructInfo(DatabaseMetaData metaData, String type) {
-        List<SchemaStructInfoDto> schemaStructInfos = new ArrayList<>();
+    @Override
+    public List<String> retrievePgDatabasesInfo(String id) {
+        DatabaseConnectionEntity testConnectionEntity = databaseConnectionService.getDatabaseConnectionInfoById(id);
+        return dynamicDataSource.getPgDatabases(testConnectionEntity);
+    }
+
+    private List<DatabaseStructInfoDto> retrieveDatabaseStructInfo(DatabaseMetaData metaData, String type) {
+        List<DatabaseStructInfoDto> databaseStructInfos = new ArrayList<>();
         try {
             if (type.equals(DatabaseConnectionConstant.CONNECTION_TYPE_MYSQL)) {
                 ResultSet catalogRet = metaData.getCatalogs();
-                schemaStructInfos = buildSchemaInfo(catalogRet, metaData, type);
+                databaseStructInfos = buildDatabaseInfo(catalogRet, metaData, type);
             } else if (type.equals(DatabaseConnectionConstant.CONNECTION_TYPE_PGSQL)) {
-                ResultSet schemaRet = metaData.getSchemas();
-                schemaStructInfos = buildSchemaInfo(schemaRet, metaData, type);
+                ResultSet databaseRet = metaData.getSchemas();
+                databaseStructInfos = buildDatabaseInfo(databaseRet, metaData, type);
             }
         } catch (Exception e) {
-            log.error("RetrieveSchemaStructInfo is error");
+            log.error("RetrieveDatabaseStructInfo is error");
         }
-        return schemaStructInfos;
+        return databaseStructInfos;
     }
 
-    private List<SchemaStructInfoDto> buildSchemaInfo(ResultSet schemaRet, DatabaseMetaData metaData, String type) {
-        List<SchemaStructInfoDto> schemaStructInfos = new ArrayList<>();
+    private List<DatabaseStructInfoDto> buildDatabaseInfo(ResultSet databaseRet, DatabaseMetaData metaData, String type) {
+        List<DatabaseStructInfoDto> databaseStructInfos = new ArrayList<>();
         try {
-            while (schemaRet.next()) {
-                String schemaName = "";
+            while (databaseRet.next()) {
+                String databaseName = "";
                 if (type.equals(DatabaseConnectionConstant.CONNECTION_TYPE_MYSQL)) {
-                    schemaName = schemaRet.getString("TABLE_CAT");
+                    databaseName = databaseRet.getString("TABLE_CAT");
 
                 } else if (type.equals(DatabaseConnectionConstant.CONNECTION_TYPE_PGSQL)) {
-                    schemaName = schemaRet.getString("TABLE_SCHEM");
+                    databaseName = databaseRet.getString("TABLE_SCHEM");
                 }
-                SchemaStructInfoDto schemaDto = new SchemaStructInfoDto();
-                schemaDto.setSchemaName(schemaName);
-                List<TableStructureInfoDto> tableStructureInfoDtoList = buildTableInfo(schemaName, metaData, type);
-                schemaDto.setTableStructureInfoDtoList(tableStructureInfoDtoList);
-                schemaStructInfos.add(schemaDto);
+                DatabaseStructInfoDto databaseDto = new DatabaseStructInfoDto();
+                databaseDto.setDatabaseName(databaseName);
+                List<TableStructureInfoDto> tableStructureInfoDtoList = buildTableInfo(databaseName, metaData, type);
+                databaseDto.setTableStructureInfoDtoList(tableStructureInfoDtoList);
+                databaseStructInfos.add(databaseDto);
             }
         } catch (Exception e) {
-            log.error("BuildSchemaInfo is error", e);
+            log.error("BuildDatabaseInfo is error", e);
         }
-        return schemaStructInfos;
+        return databaseStructInfos;
     }
 
-    private List<TableStructureInfoDto> buildTableInfo(String schemaName, DatabaseMetaData metaData, String type) {
+    private List<TableStructureInfoDto> buildTableInfo(String databaseName, DatabaseMetaData metaData, String type) {
         List<TableStructureInfoDto> tableStructureInfoDtoList = new ArrayList<>();
         try {
             ResultSet tableRet = null;
             if (type.equals(DatabaseConnectionConstant.CONNECTION_TYPE_MYSQL)) {
-                tableRet = metaData.getTables(schemaName, "%", "%",
+                tableRet = metaData.getTables(databaseName, "%", "%",
                         new String[]{"TABLE"});
             } else if (type.equals(DatabaseConnectionConstant.CONNECTION_TYPE_PGSQL)) {
-                tableRet = metaData.getTables(null, schemaName, "%",
+                tableRet = metaData.getTables(null, databaseName, "%",
                         new String[]{"TABLE"});
             }
 
@@ -115,7 +122,7 @@ public class DatabaseComplexServiceImpl implements DatabaseComplexService {
                 String tableComment = tableRet.getString("REMARKS");
                 tableDto.setTableName(tableName);
                 tableDto.setTableComment(tableComment);
-                List<ColumnStructureInfoDto> columnStructureInfoDtoList = buildColumnInfo(schemaName, tableName, metaData);
+                List<ColumnStructureInfoDto> columnStructureInfoDtoList = buildColumnInfo(databaseName, tableName, metaData);
                 tableDto.setColumnStructureInfoDtoList(columnStructureInfoDtoList);
                 tableStructureInfoDtoList.add(tableDto);
             }
@@ -125,10 +132,10 @@ public class DatabaseComplexServiceImpl implements DatabaseComplexService {
         return tableStructureInfoDtoList;
     }
 
-    private List<ColumnStructureInfoDto> buildColumnInfo(String schemaName, String tableName, DatabaseMetaData metaData) {
+    private List<ColumnStructureInfoDto> buildColumnInfo(String databaseName, String tableName, DatabaseMetaData metaData) {
         List<ColumnStructureInfoDto> columnStructureInfoDtoList = new ArrayList<>();
         try {
-            ResultSet columnRet = metaData.getColumns(schemaName, "%", tableName, "%");
+            ResultSet columnRet = metaData.getColumns(databaseName, "%", tableName, "%");
             while (columnRet.next()) {
                 ColumnStructureInfoDto columnStructureInfoDto = new ColumnStructureInfoDto();
                 String columnName = columnRet.getString("COLUMN_NAME");
@@ -153,4 +160,10 @@ public class DatabaseComplexServiceImpl implements DatabaseComplexService {
     public void setDynamicDataSource(DynamicDataSource dynamicDataSource) {
         this.dynamicDataSource = dynamicDataSource;
     }
+
+    @Autowired
+    public void setDatabaseDynamicService(DatabaseDynamicService databaseDynamicService) {
+        this.databaseDynamicService = databaseDynamicService;
+    }
+
 }

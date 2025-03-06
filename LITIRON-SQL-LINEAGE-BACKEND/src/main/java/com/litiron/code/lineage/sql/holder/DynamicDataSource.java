@@ -2,14 +2,15 @@ package com.litiron.code.lineage.sql.holder;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.stat.DruidDataSourceStatManager;
+import com.litiron.code.lineage.sql.constants.DatabaseConnectionConstant;
 import com.litiron.code.lineage.sql.entity.database.DatabaseConnectionEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 import org.springframework.util.ObjectUtils;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -154,13 +155,13 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
         this.dynamicDefaultTargetDataSource = dynamicDefaultTargetDataSource;
     }
 
-    public DatabaseMetaData createDataSourceWithCheck(DatabaseConnectionEntity dataSource) {
+    public DatabaseMetaData createDataSourceWithCheck(DatabaseConnectionEntity dataSource, String pgDbName) {
         try {
             DatabaseMetaData dataSourceMetaData = null;
             String datasourceId = dataSource.getId();
             log.info("正在检查数据源：" + datasourceId);
             Map<Object, Object> targetDataSources = this.dynamicTargetDataSources;
-            if (targetDataSources.containsKey(datasourceId)) {
+            if (!dataSource.getType().equals(DatabaseConnectionConstant.CONNECTION_TYPE_PGSQL) && targetDataSources.containsKey(datasourceId)) {
                 log.info("数据源" + datasourceId + "之前已经创建，准备测试数据源是否正常...");
                 DruidDataSource druidDataSource = (DruidDataSource) targetDataSources.get(datasourceId);
                 boolean rightFlag = true;
@@ -194,12 +195,12 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
                     log.info("不需要重新创建数据源");
                 } else {
                     log.info("准备重新创建数据源...");
-                    dataSourceMetaData = createDataSource(dataSource);
+                    dataSourceMetaData = createDataSource(dataSource, pgDbName);
                     log.info("重新创建数据源完成");
                 }
                 return dataSourceMetaData;
             } else {
-                dataSourceMetaData = createDataSource(dataSource);
+                dataSourceMetaData = createDataSource(dataSource, pgDbName);
                 return dataSourceMetaData;
             }
         } catch (Exception e) {
@@ -208,7 +209,36 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
         return null;
     }
 
-    private DatabaseMetaData createDataSource(DatabaseConnectionEntity dataSource) {
+    // 获取 PostgresSQL 所有数据库信息
+    public List<String> getPgDatabases(DatabaseConnectionEntity dataSource) {
+        List<String> databases = new ArrayList<>();
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+        try {
+            String url = "jdbc:postgresql://" + dataSource.getIp() + ":" + dataSource.getPort() + "/postgres";
+            connection = DriverManager.getConnection(url, dataSource.getUsername(), dataSource.getPassword());
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery("SELECT datname FROM pg_database WHERE datistemplate = false;");
+
+            while (resultSet.next()) {
+                databases.add(resultSet.getString("datname"));
+            }
+        } catch (Exception e) {
+            log.error("获取 PostgreSQL 数据库列表失败", e);
+        } finally {
+            try {
+                if (resultSet != null) resultSet.close();
+                if (statement != null) statement.close();
+                if (connection != null) connection.close();
+            } catch (Exception e) {
+                log.error("关闭连接失败", e);
+            }
+        }
+        return databases;
+    }
+
+    private DatabaseMetaData createDataSource(DatabaseConnectionEntity dataSource, String pgDbName) {
         String datasourceId = dataSource.getId();
         log.info("准备创建数据源" + datasourceId);
         String databaseType = dataSource.getType();
@@ -220,7 +250,7 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
             url = "jdbc:mysql://" + dataSource.getIp() + ":" + dataSource.getPort() + "?useSSL=false&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&serverTimezone=GMT%2B8";
             driveClass = "com.mysql.cj.jdbc.Driver";
         } else {
-            url = "jdbc:postgresql://" + dataSource.getIp() + ":" + dataSource.getPort() + "/sql_lineage_pg";
+            url = "jdbc:postgresql://" + dataSource.getIp() + ":" + dataSource.getPort() + "/" + pgDbName;
             driveClass = "org.postgresql.Driver";
         }
         if (testDatasource(datasourceId, driveClass, url, username, password)) {

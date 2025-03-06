@@ -18,18 +18,18 @@ import java.util.List;
 @Getter
 @Setter
 public class SqlLineageNodeEntity {
-
     /**
      * 唯一的id 由neo4j自动生成，应该也可以自定义
      */
     @Id
     @GeneratedValue
     private String id;
-
     private String tableName;
-
-    private String schema;
-
-    @Relationship(type = "joinRelationShip",direction = Relationship.Direction.OUTGOING)
+    private String databaseName;
+    private String connectionIp;
+    private String schemaName;
+    private String connectionPort;
+    private String tableComment;
+    @Relationship(type = "joinRelationShip", direction = Relationship.Direction.OUTGOING)
     private List<SqlLineageEdgeEntity> outgoingRelationShip;
 }
