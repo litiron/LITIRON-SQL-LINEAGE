@@ -1,5 +1,7 @@
 package com.litiron.code.lineage.sql.entity;
 
+import com.litiron.code.lineage.sql.common.constants.TableConstants;
+import com.litiron.code.lineage.sql.config.Neo4jTableNodeGenerator;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
@@ -22,14 +24,21 @@ public class SqlLineageNodeEntity {
      * 唯一的id 由neo4j自动生成，应该也可以自定义
      */
     @Id
-    @GeneratedValue
+    @GeneratedValue(value = Neo4jTableNodeGenerator.class)
     private String id;
+
     private String tableName;
-    private String databaseName;
-    private String connectionIp;
+
+    private String databaseName = TableConstants.DEFAULT_DATABASE_NAME;
+
+    private String connectionIp = TableConstants.DEFAULT_CONNECTION_IP;
+
+    private Integer connectionPort = TableConstants.DEFAULT_CONNECTION_PORT;
+
     private String schemaName;
-    private String connectionPort;
+
     private String tableComment;
+
     @Relationship(type = "joinRelationShip", direction = Relationship.Direction.OUTGOING)
-    private List<SqlLineageEdgeEntity> outgoingRelationShip;
+    private List<SqlLineageEdgeEntity> outRelationShip;
 }

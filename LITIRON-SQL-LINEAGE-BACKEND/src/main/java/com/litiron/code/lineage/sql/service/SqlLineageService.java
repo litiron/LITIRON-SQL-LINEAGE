@@ -10,6 +10,8 @@ import com.litiron.code.lineage.sql.dto.ParsedTableMeta;
 public interface SqlLineageService {
 
     /**
+     * 解析出依赖的表信息
+     *
      * @param sql: sql语句
      * @Description: 解析sql中涉及的表信息
      * @Author: Litiron
@@ -20,12 +22,14 @@ public interface SqlLineageService {
 
 
     /**
+     * 解析出表级别的依赖关系
+     *
      * @param sql: sql语句
      * @Description: 解析sql中关联关系
      * @Author: Litiron
      * @Date: 2024/6/16 15:30
      * @return: void
      **/
-    void parseSqlJoinRelation(String sql);
+    void parseTableDependency(String sql);
 
 }

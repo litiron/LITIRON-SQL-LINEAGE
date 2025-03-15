@@ -1,5 +1,6 @@
 package com.litiron.code.lineage.sql.dto.lineage;
 
+import com.litiron.code.lineage.sql.entity.SqlLineageNodeEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,16 +9,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author 李日红
- * @description: 结点连接线关系DTO
- * @create 2025/2/28 17:50
- */
+ * @description: 结点连接线关系
+ * @author: Litiron
+ * @create: 2024-07-02 22:01
+ **/
 @Setter
 @Getter
-public class SqlLineageTableEdgeDto {
-    private String id;
+public class SqlLineageEdgeDto {
 
-    private SqlLineageTableNodeDto to;
+    private SqlLineageNodeEntity to;
 
     private String leftTableName;
 

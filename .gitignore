@@ -1,6 +1,7 @@
 # Compiled class file
 *.class
 
+
 # Log file
 *.log
 
@@ -22,6 +23,7 @@
 # idea
 .DS_Store
 .idea
+.xcodemap
 *.iml
 logs
 out

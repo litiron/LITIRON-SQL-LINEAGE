@@ -1,5 +1,8 @@
 package com.litiron.code.lineage.sql.dto;
 
+import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableBaseDto;
+import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableDto;
+import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableNodeDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,9 +18,9 @@ import java.util.List;
 @Setter
 public class ParsedTableMeta {
 
-    private List<String> sourceTableList = new ArrayList<>();
+    private List<SqlLineageTableDto> sourceTableList = new ArrayList<>();
 
-    private List<String> destTableList = new ArrayList<>();
+    private List<SqlLineageTableDto> destTableList = new ArrayList<>();
 
     @Override
     public String toString() {

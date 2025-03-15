@@ -12,13 +12,9 @@ import java.util.List;
  */
 @Setter
 @Getter
-public class SqlLineageTableNodeDto {
+public class SqlLineageTableNodeDto extends SqlLineageTableBaseDto {
+
     private String id;
-    private String tableName;
-    private String databaseName;
-    private String connectionIp;
-    private String schemaName;
-    private String connectionPort;
-    private String tableComment;
+
     private List<SqlLineageTableEdgeDto> outgoingRelationShip;
 }

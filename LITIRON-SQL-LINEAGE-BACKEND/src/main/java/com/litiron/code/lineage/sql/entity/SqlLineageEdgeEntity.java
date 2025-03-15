@@ -11,7 +11,6 @@ import org.springframework.data.neo4j.core.schema.TargetNode;
  * @author: Litiron
  * @create: 2024-07-02 22:01
  **/
-//@Node(labels = "表连接关系")
 @RelationshipProperties
 @Setter
 @Getter
@@ -25,5 +24,19 @@ public class SqlLineageEdgeEntity {
     @TargetNode
     private SqlLineageNodeEntity to;
 
-    private String relation;
+    private String uniqueId;
+
+    private String leftTableName;
+
+    private String rightTableName;
+
+    private String relationFiled;
+
+    public String getUniqueId() {
+        return leftTableName + ":" + rightTableName;
+    }
+
+    public void setUniqueId() {
+        this.uniqueId = this.getUniqueId();
+    }
 }

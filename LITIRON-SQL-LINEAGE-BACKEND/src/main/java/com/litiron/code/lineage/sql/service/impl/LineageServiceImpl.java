@@ -48,7 +48,7 @@ public class LineageServiceImpl implements LineageService {
         SqlLineageNodeEntity target = buildSqlLineageNodeParams(sqlLineageTableNodeParamsDto);
         ExampleMatcher exampleMatcher = ExampleMatcher.matchingAll().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.DEFAULT);
         List<SqlLineageNodeEntity> foundNode = sqlLineageNodeRepository.findAll(Example.of(target, exampleMatcher));
-        if (foundNode.size() == 0) {
+        if (foundNode.isEmpty()) {
             return null;
         }
         return buildSqlLineageTableNodeDtos(foundNode);
@@ -62,7 +62,7 @@ public class LineageServiceImpl implements LineageService {
         target.setDatabaseName(sqlLineageTableNodeParamsDto.getDatabaseName());
         DatabaseConnectionEntity databaseConnectionInfo = databaseConnectionService.getDatabaseConnectionInfoById(sqlLineageTableNodeParamsDto.getId());
         target.setConnectionIp(databaseConnectionInfo.getIp());
-        target.setConnectionPort(databaseConnectionInfo.getPort());
+        target.setConnectionPort(Integer.valueOf(databaseConnectionInfo.getPort()));
         return target;
     }
 
