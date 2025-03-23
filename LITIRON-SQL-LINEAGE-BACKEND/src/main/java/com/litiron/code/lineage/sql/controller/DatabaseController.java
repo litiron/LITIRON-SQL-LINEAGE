@@ -2,7 +2,6 @@ package com.litiron.code.lineage.sql.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.litiron.code.lineage.sql.bo.database.QueryTableDetailsParamsBo;
 import com.litiron.code.lineage.sql.common.Rest;
 import com.litiron.code.lineage.sql.dto.database.DatabaseConnectionDto;
 import com.litiron.code.lineage.sql.dto.database.DatabaseStructInfoDto;
@@ -54,8 +53,7 @@ public class DatabaseController {
     }
 
     @PostMapping("/retrieve/table/details")
-    public Rest<?> getTableDetails(@RequestBody QueryTableDetailsParamsBo queryTableDetailsBo) {
-        QueryTableDetailsParamsDto queryTableDetailsParamsDto = BeanUtil.copyProperties(queryTableDetailsBo, QueryTableDetailsParamsDto.class);
+    public Rest<?> getTableDetails(@RequestBody QueryTableDetailsParamsDto queryTableDetailsParamsDto) {
         IPage<Map<String, Object>> tableDetails = databaseComplexService.retrieveTableDetails(queryTableDetailsParamsDto);
 
         return Rest.success(tableDetails.getRecords(), tableDetails.getTotal());

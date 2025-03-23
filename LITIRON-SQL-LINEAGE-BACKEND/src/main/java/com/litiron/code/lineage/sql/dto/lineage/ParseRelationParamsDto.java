@@ -1,4 +1,4 @@
-package com.litiron.code.lineage.sql.bo;
+package com.litiron.code.lineage.sql.dto.lineage;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +10,8 @@ import lombok.Setter;
  **/
 @Getter
 @Setter
-public class ParseRelationParamsBo {
-
+public class ParseRelationParamsDto {
     private String sql;
+    private String connectionId;
+    private String pgDbName;
 }

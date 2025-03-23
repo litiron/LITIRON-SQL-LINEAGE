@@ -28,7 +28,7 @@
         <log4j.version>1.2.17</log4j.version>
         <druid.version>1.1.23</druid.version>
         <postgresql.version>42.6.2</postgresql.version>
-
+        <okhttp.version>4.12.0</okhttp.version>
     </properties>
 
     <dependencyManagement>
@@ -84,6 +84,11 @@
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-jsqlparser-4.9</artifactId>
                 <version>${mybatisPlus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version> <!-- 确保版本是最新的 -->
             </dependency>
         </dependencies>
     </dependencyManagement>

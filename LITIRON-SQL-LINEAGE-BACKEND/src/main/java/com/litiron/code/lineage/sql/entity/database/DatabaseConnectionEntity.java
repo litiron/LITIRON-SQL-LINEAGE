@@ -16,7 +16,7 @@ import lombok.Setter;
 public class DatabaseConnectionEntity {
     private String id;
     private String ip;
-    private String port;
+    private Integer port;
     private String username;
     private String password;
     @TableField(value = "connection_name")

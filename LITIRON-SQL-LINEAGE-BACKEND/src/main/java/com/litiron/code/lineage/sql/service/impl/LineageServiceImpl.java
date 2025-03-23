@@ -46,7 +46,7 @@ public class LineageServiceImpl implements LineageService {
     @Override
     public List<SqlLineageTableNodeDto> retrieveNeo4jTableInfo(SqlLineageTableNodeParamsDto sqlLineageTableNodeParamsDto) {
         SqlLineageNodeEntity target = buildSqlLineageNodeParams(sqlLineageTableNodeParamsDto);
-        ExampleMatcher exampleMatcher = ExampleMatcher.matchingAll().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.DEFAULT);
+        ExampleMatcher exampleMatcher = ExampleMatcher.matchingAll().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.DEFAULT).withIgnorePaths("schemaName");
         List<SqlLineageNodeEntity> foundNode = sqlLineageNodeRepository.findAll(Example.of(target, exampleMatcher));
         if (foundNode.isEmpty()) {
             return null;
@@ -62,7 +62,7 @@ public class LineageServiceImpl implements LineageService {
         target.setDatabaseName(sqlLineageTableNodeParamsDto.getDatabaseName());
         DatabaseConnectionEntity databaseConnectionInfo = databaseConnectionService.getDatabaseConnectionInfoById(sqlLineageTableNodeParamsDto.getId());
         target.setConnectionIp(databaseConnectionInfo.getIp());
-        target.setConnectionPort(Integer.valueOf(databaseConnectionInfo.getPort()));
+        target.setConnectionPort(databaseConnectionInfo.getPort());
         return target;
     }
 
