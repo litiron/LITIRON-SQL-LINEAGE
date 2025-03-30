@@ -1,11 +1,14 @@
 package com.litiron.code.lineage.sql.controller;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.litiron.code.lineage.sql.common.BusinessException;
 import com.litiron.code.lineage.sql.common.Rest;
-import com.litiron.code.lineage.sql.dto.database.DatabaseConnectionDto;
-import com.litiron.code.lineage.sql.dto.database.DatabaseStructInfoDto;
-import com.litiron.code.lineage.sql.dto.database.QueryTableDetailsParamsDto;
+import com.litiron.code.lineage.sql.constants.ExceptionCategoryConstant;
+import com.litiron.code.lineage.sql.dto.database.*;
 import com.litiron.code.lineage.sql.service.DatabaseComplexService;
 import com.litiron.code.lineage.sql.vo.database.DatabaseConnectionVo;
 import com.litiron.code.lineage.sql.vo.database.DatabaseStructInfoVo;
@@ -34,6 +37,66 @@ public class DatabaseController {
         return Rest.success(connectionVos);
     }
 
+    @PostMapping("/myConnection/retrieve")
+    public Rest<?> retrieveMyDatabaseConnectionInfo(@RequestBody QueryDatabaseConnectionParamsDto queryDatabaseConnectionParamsDto) {
+        try {
+            validateDbConnectionDto(queryDatabaseConnectionParamsDto);
+            IPage<DatabaseConnectionDto> dtoPage = databaseComplexService.retrieveMyDatabaseConnectionInfo(queryDatabaseConnectionParamsDto);
+            return Rest.success(dtoPage.getRecords(), dtoPage.getTotal());
+
+        } catch (BusinessException be) {
+            log.error("RetrieveMyDatabaseConnectionInfo business error ,and params are {}", JSONUtil.toJsonStr(queryDatabaseConnectionParamsDto), be);
+            return Rest.error(be.getMessage());
+        } catch (Exception e) {
+            log.error("RetrieveMyDatabaseConnectionInfo error ,and params are {}", JSONUtil.toJsonStr(queryDatabaseConnectionParamsDto), e);
+            return Rest.error(ExceptionCategoryConstant.UNKNOWN_EXCEPTION);
+        }
+    }
+
+    @PostMapping("/myConnection/add")
+    public Rest<?> addDatabaseConnectionInfo(@RequestBody DatabaseConnectionParamsDto databaseConnectionParamsDto) {
+        try {
+            validateAddDbConnectionDto(databaseConnectionParamsDto);
+            databaseComplexService.addDatabaseConnectionInfo(databaseConnectionParamsDto);
+            return Rest.success("添加成功");
+        } catch (BusinessException be) {
+            log.error("AddDatabaseConnectionInfo business error ,and params are {}", JSONUtil.toJsonStr(databaseConnectionParamsDto), be);
+            return Rest.error(be.getMessage());
+        } catch (Exception e) {
+            log.error("AddDatabaseConnectionInfo error ,and params are {}", JSONUtil.toJsonStr(databaseConnectionParamsDto), e);
+            return Rest.error(ExceptionCategoryConstant.UNKNOWN_EXCEPTION);
+        }
+    }
+
+    @GetMapping("/myConnection/delete")
+    public Rest<?> deleteDatabaseConnectionInfo(@RequestParam("id") String id) {
+        try {
+            databaseComplexService.deleteDatabaseConnectionInfo(id);
+            return Rest.success("删除成功");
+        } catch (BusinessException be) {
+            log.error("DeleteDatabaseConnectionInfo business error ,and id is {}", id, be);
+            return Rest.error(be.getMessage());
+        } catch (Exception e) {
+            log.error("DeleteDatabaseConnectionInfo error ,and id is {}", id, e);
+            return Rest.error(ExceptionCategoryConstant.UNKNOWN_EXCEPTION);
+        }
+    }
+
+    @PostMapping("/myConnection/edit")
+    public Rest<?> editDatabaseConnectionInfo(@RequestBody DatabaseConnectionParamsDto databaseConnectionParamsDto) {
+        try {
+            validateEditDbConnectionDto(databaseConnectionParamsDto);
+            databaseComplexService.editDatabaseConnectionInfo(databaseConnectionParamsDto);
+            return Rest.success("编辑成功");
+        } catch (BusinessException be) {
+            log.error("EditDatabaseConnectionInfo business error ,and params are {}", JSONUtil.toJsonStr(databaseConnectionParamsDto), be);
+            return Rest.error(be.getMessage());
+        } catch (Exception e) {
+            log.error("EditDatabaseConnectionInfo error ,and params are {}", JSONUtil.toJsonStr(databaseConnectionParamsDto), e);
+            return Rest.error(ExceptionCategoryConstant.UNKNOWN_EXCEPTION);
+        }
+    }
+
     @GetMapping("/retrieve/pgDbs")
     public Rest<List<String>> retrievePgDatabasesInfo(@RequestParam(value = "id") String id) {
         List<String> pgDbList = databaseComplexService.retrievePgDatabasesInfo(id);
@@ -53,10 +116,46 @@ public class DatabaseController {
     }
 
     @PostMapping("/retrieve/table/details")
-    public Rest<?> getTableDetails(@RequestBody QueryTableDetailsParamsDto queryTableDetailsParamsDto) {
-        IPage<Map<String, Object>> tableDetails = databaseComplexService.retrieveTableDetails(queryTableDetailsParamsDto);
+    public Rest<?> getTableDetails(@RequestBody TableDetailsParamsDto tableDetailsParamsDto) {
+        IPage<Map<String, Object>> tableDetails = databaseComplexService.retrieveTableDetails(tableDetailsParamsDto);
 
         return Rest.success(tableDetails.getRecords(), tableDetails.getTotal());
+    }
+
+    private void validateEditDbConnectionDto(DatabaseConnectionParamsDto databaseConnectionParamsDto) {
+        if (StrUtil.isEmpty(databaseConnectionParamsDto.getId())) {
+            throw new BusinessException("id不能为空");
+        }
+    }
+
+    private void validateAddDbConnectionDto(DatabaseConnectionParamsDto databaseConnectionParamsDto) {
+        if (StrUtil.isEmpty(databaseConnectionParamsDto.getConnectionName())) {
+            throw new BusinessException("连接名不能为空");
+        }
+        if (StrUtil.isEmpty(databaseConnectionParamsDto.getIp())) {
+            throw new BusinessException("ip不能为空");
+        }
+        if (ObjectUtil.isEmpty(databaseConnectionParamsDto.getPort())) {
+            throw new BusinessException("端口号不能为空");
+        }
+        if (StrUtil.isEmpty(databaseConnectionParamsDto.getType())) {
+            throw new BusinessException("数据库类型不能为空");
+        }
+        if (StrUtil.isEmpty(databaseConnectionParamsDto.getUserName())) {
+            throw new BusinessException("用户名不能为空");
+        }
+        if (StrUtil.isEmpty(databaseConnectionParamsDto.getPassword())) {
+            throw new BusinessException("密码不能为空");
+        }
+    }
+
+    private void validateDbConnectionDto(QueryDatabaseConnectionParamsDto queryDatabaseConnectionParamsDto) {
+        if (ObjectUtil.isEmpty(queryDatabaseConnectionParamsDto.getPageSize())) {
+            throw new BusinessException("分页大小不能为空");
+        }
+        if (ObjectUtil.isEmpty(queryDatabaseConnectionParamsDto.getPageNumber())) {
+            throw new BusinessException("分页数不能为空");
+        }
     }
 
     @Autowired

@@ -10,7 +10,7 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public class QueryTableDetailsParamsDto {
+public class TableDetailsParamsDto {
     private Integer pageSize;
     private Integer pageNumber;
     /*

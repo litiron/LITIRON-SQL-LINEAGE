@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author 李日红
- * @description:
+ * @description: 数据库相关
  * @create 2024/12/2 21:35
  */
 @Slf4j

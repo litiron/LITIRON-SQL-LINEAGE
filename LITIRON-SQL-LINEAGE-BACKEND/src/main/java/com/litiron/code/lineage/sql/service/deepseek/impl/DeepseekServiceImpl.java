@@ -6,7 +6,6 @@ import com.litiron.code.lineage.sql.dto.deepseek.DeepseekRequestDto;
 import com.litiron.code.lineage.sql.dto.deepseek.DeepseekResponseDto;
 import com.litiron.code.lineage.sql.service.deepseek.DeepseekService;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -24,7 +23,6 @@ import java.io.IOException;
 @Service
 @Slf4j
 public class DeepseekServiceImpl implements DeepseekService {
-    private OkHttpClient okHttpClient;
     private WebClient deepSeekWebClient;
     private ObjectMapper objectMapper = new ObjectMapper();
     @Value("${deepseek.api.url}")
@@ -70,10 +68,6 @@ public class DeepseekServiceImpl implements DeepseekService {
         return lastSentenceEnd != -1 ? lastSentenceEnd + 1 : -1;
     }
 
-    @Autowired
-    public void setOkHttpClient(OkHttpClient okHttpClient) {
-        this.okHttpClient = okHttpClient;
-    }
 
     @Autowired
     public void setObjectMapper(ObjectMapper objectMapper) {

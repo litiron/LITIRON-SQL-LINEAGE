@@ -6,13 +6,15 @@ package com.litiron.code.lineage.sql.common;
  * @create 2025/2/22 17:06
  */
 public class BusinessException extends RuntimeException {
+
     String message;
 
     public BusinessException() {
     }
 
     public BusinessException(String message) {
-        this.message = message;
+        super(message);
     }
+
 
 }

@@ -217,7 +217,7 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
         ResultSet resultSet = null;
         try {
             String url = "jdbc:postgresql://" + dataSource.getIp() + ":" + dataSource.getPort() + "/postgres";
-            connection = DriverManager.getConnection(url, dataSource.getUsername(), dataSource.getPassword());
+            connection = DriverManager.getConnection(url, dataSource.getUserName(), dataSource.getPassword());
             statement = connection.createStatement();
             resultSet = statement.executeQuery("SELECT datname FROM pg_database WHERE datistemplate = false;");
 
@@ -242,7 +242,7 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
         String datasourceId = dataSource.getId();
         log.info("准备创建数据源" + datasourceId);
         String databaseType = dataSource.getType();
-        String username = dataSource.getUsername();
+        String username = dataSource.getUserName();
         String password = dataSource.getPassword();
         String url = "";
         String driveClass = "";

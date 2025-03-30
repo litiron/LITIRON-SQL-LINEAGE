@@ -11,7 +11,19 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DatabaseConnectionVo {
-    private Integer id;
+    private String id;
+
+    private String ip;
+
+    private Integer port;
+
+    private String userName;
+
+    private String password;
+
     private String connectionName;
+
     private String type;
+
+    private String uId;
 }

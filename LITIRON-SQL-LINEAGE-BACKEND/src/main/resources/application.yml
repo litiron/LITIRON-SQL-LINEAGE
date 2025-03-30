@@ -53,9 +53,16 @@ mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl #开启sql日志
+    map-underscore-to-camel-case: true
+
 logging:
   level:
     org:
       springframework:
         data:
           neo4j: DEBUG
+deepseek:
+  api:
+    key: "sk-dec9f63bdacf455999064dd1b87dd256"
+    url: "https://api.deepseek.com/v1/chat/completions"
+

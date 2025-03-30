@@ -1,9 +1,7 @@
 package com.litiron.code.lineage.sql.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.litiron.code.lineage.sql.dto.database.DatabaseConnectionDto;
-import com.litiron.code.lineage.sql.dto.database.DatabaseStructInfoDto;
-import com.litiron.code.lineage.sql.dto.database.QueryTableDetailsParamsDto;
+import com.litiron.code.lineage.sql.dto.database.*;
 
 import java.util.List;
 import java.util.Map;
@@ -39,7 +37,7 @@ public interface DatabaseComplexService {
      * @author: 李日红
      * @create: 2024/12/7 13:35
      */
-    IPage<Map<String, Object>> retrieveTableDetails(QueryTableDetailsParamsDto queryTableDetailsParamsDto);
+    IPage<Map<String, Object>> retrieveTableDetails(TableDetailsParamsDto tableDetailsParamsDto);
 
     /**
      * @description: 根据连接信息获取pg的所有数据库信息
@@ -49,4 +47,40 @@ public interface DatabaseComplexService {
      * @create: 2025/2/21 11:37
      */
     List<String> retrievePgDatabasesInfo(String id);
+
+    /**
+     * @description: 获取指定用户拥有的数据库连接
+     * @param: databaseConnectionParamsDto 查询参数
+     * @return: com.baomidou.mybatisplus.core.metadata.IPage<com.litiron.code.lineage.sql.dto.database.DatabaseConnectionDto>
+     * @author: 李日红
+     * @create: 2025/3/28 0:53
+     */
+    IPage<DatabaseConnectionDto> retrieveMyDatabaseConnectionInfo(QueryDatabaseConnectionParamsDto queryDatabaseConnectionParamsDto);
+
+    /**
+     * @description: 添加数据库连接
+     * @param: databaseConnectionParamsDto 数据库连接信息dto
+     * @return: void
+     * @author: 李日红
+     * @create: 2025/3/28 2:30
+     */
+    void addDatabaseConnectionInfo(DatabaseConnectionParamsDto databaseConnectionParamsDto);
+
+    /**
+     * @description: 删除数据库连接
+     * @param: id 数据库连接id
+     * @return: void
+     * @author: 李日红
+     * @create: 2025/3/28 2:38
+     */
+    void deleteDatabaseConnectionInfo(String id);
+
+    /**
+     * @description: 编辑数据库连接
+     * @param: databaseConnectionParamsDto 数据库连接信息dto
+     * @return: void
+     * @author: 李日红
+     * @create: 2025/3/28 2:45
+     */
+    void editDatabaseConnectionInfo(DatabaseConnectionParamsDto databaseConnectionParamsDto);
 }

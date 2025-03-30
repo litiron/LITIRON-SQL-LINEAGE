@@ -1,9 +1,11 @@
 package com.litiron.code.lineage.sql.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.litiron.code.lineage.sql.dao.SqlLineageNodeRepository;
 import com.litiron.code.lineage.sql.dto.database.DatabaseConnectionDto;
 import com.litiron.code.lineage.sql.dto.database.DatabaseStructInfoDto;
+import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableEdgeDto;
 import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableNodeDto;
 import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableNodeParamsDto;
 import com.litiron.code.lineage.sql.entity.SqlLineageNodeEntity;
@@ -11,10 +13,9 @@ import com.litiron.code.lineage.sql.entity.database.DatabaseConnectionEntity;
 import com.litiron.code.lineage.sql.service.LineageService;
 import com.litiron.code.lineage.sql.service.database.DatabaseConnectionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,15 +44,47 @@ public class LineageServiceImpl implements LineageService {
         return databaseComplexService.updateDatabaseConnection(id, pgDbName);
     }
 
+    private final String NODE_ID_PATTERN = "%s:%s:%s:%s";
+
     @Override
     public List<SqlLineageTableNodeDto> retrieveNeo4jTableInfo(SqlLineageTableNodeParamsDto sqlLineageTableNodeParamsDto) {
         SqlLineageNodeEntity target = buildSqlLineageNodeParams(sqlLineageTableNodeParamsDto);
-        ExampleMatcher exampleMatcher = ExampleMatcher.matchingAll().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.DEFAULT).withIgnorePaths("schemaName");
-        List<SqlLineageNodeEntity> foundNode = sqlLineageNodeRepository.findAll(Example.of(target, exampleMatcher));
-        if (foundNode.isEmpty()) {
-            return null;
+        if (StrUtil.isEmpty(target.getSchemaName())) {
+            target.setSchemaName("null");
         }
-        return buildSqlLineageTableNodeDtos(foundNode);
+        String id = String.format(NODE_ID_PATTERN, target.getConnectionIp(), target.getDatabaseName(), target.getSchemaName(), target.getTableName());
+        SqlLineageNodeEntity foundNode = sqlLineageNodeRepository.findNodeWithAllRelationships(id);
+        return (foundNode != null) ? List.of(convertToFullDto(foundNode)) : null;
+    }
+
+    private SqlLineageTableNodeDto convertToFullDto(SqlLineageNodeEntity entity) {
+        SqlLineageTableNodeDto dto = BeanUtil.copyProperties(entity, SqlLineageTableNodeDto.class);
+
+        // 处理下游关系
+        List<SqlLineageTableEdgeDto> downstreamEdges = entity.getOutRelationShip().stream()
+                .map(edge -> {
+                    SqlLineageTableEdgeDto edgeDto = BeanUtil.copyProperties(edge, SqlLineageTableEdgeDto.class);
+                    edgeDto.setDirection("DOWNSTREAM");
+                    return edgeDto;
+                })
+                .toList();
+
+//        // 处理上游关系
+        List<SqlLineageTableEdgeDto> upstreamEdges = entity.getInRelationship().stream()
+                .map(edge -> {
+                    SqlLineageTableEdgeDto edgeDto = BeanUtil.copyProperties(edge, SqlLineageTableEdgeDto.class);
+                    edgeDto.setDirection("UPSTREAM");
+                    return edgeDto;
+                })
+                .toList();
+
+        // 合并所有关系
+        List<SqlLineageTableEdgeDto> allEdges = new ArrayList<>();
+        allEdges.addAll(downstreamEdges);
+        allEdges.addAll(upstreamEdges);
+
+        dto.setOutgoingRelationShip(allEdges);
+        return dto;
     }
 
     private SqlLineageNodeEntity buildSqlLineageNodeParams(SqlLineageTableNodeParamsDto sqlLineageTableNodeParamsDto) {
@@ -66,9 +99,6 @@ public class LineageServiceImpl implements LineageService {
         return target;
     }
 
-    private List<SqlLineageTableNodeDto> buildSqlLineageTableNodeDtos(List<SqlLineageNodeEntity> foundNode) {
-        return BeanUtil.copyToList(foundNode, SqlLineageTableNodeDto.class);
-    }
 
     @Autowired
     public void setDatabaseConnectionService(DatabaseConnectionService databaseConnectionService) {

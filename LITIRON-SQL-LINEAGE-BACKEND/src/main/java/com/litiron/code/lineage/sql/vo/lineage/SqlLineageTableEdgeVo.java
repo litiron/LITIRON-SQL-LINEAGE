@@ -3,6 +3,10 @@ package com.litiron.code.lineage.sql.vo.lineage;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author 李日红
  * @description: 结点连接线关系DTO
@@ -12,6 +16,16 @@ import lombok.Setter;
 @Getter
 public class SqlLineageTableEdgeVo {
     private String id;
+
     private SqlLineageTableNodeVo to;
-    private String relation;
+
+    private String leftTableName;
+
+    private String rightTableName;
+
+    private String direction;
+
+    private String relationFiled;
+
+    private List<Map<String, String>> joinFieldList = new ArrayList<>();
 }

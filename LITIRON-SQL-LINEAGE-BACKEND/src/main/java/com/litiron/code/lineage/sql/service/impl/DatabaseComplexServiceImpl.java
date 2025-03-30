@@ -36,14 +36,14 @@ public class DatabaseComplexServiceImpl implements DatabaseComplexService {
 
     @Override
     public List<DatabaseConnectionDto> retrieveDatabaseConnectionInfo() {
-        List<DatabaseConnectionEntity> databaseConnectionEntities = databaseConnectionService.getaAllDatabaseConnectionInfo();
+        List<DatabaseConnectionEntity> databaseConnectionEntities = databaseConnectionService.getAllDatabaseConnectionInfo();
         return BeanUtil.copyToList(databaseConnectionEntities, DatabaseConnectionDto.class);
     }
 
     @Override
-    public List<DatabaseStructInfoDto> updateDatabaseConnection(String id,String pgDbName) {
+    public List<DatabaseStructInfoDto> updateDatabaseConnection(String id, String pgDbName) {
         DatabaseConnectionEntity testConnectionEntity = databaseConnectionService.getDatabaseConnectionInfoById(id);
-        DatabaseMetaData metaData = dynamicDataSource.createDataSourceWithCheck(testConnectionEntity,pgDbName);
+        DatabaseMetaData metaData = dynamicDataSource.createDataSourceWithCheck(testConnectionEntity, pgDbName);
         List<DatabaseStructInfoDto> databaseStructInfos = retrieveDatabaseStructInfo(metaData, testConnectionEntity.getType());
         DBContextHolder.setDataSource(id);
         DBContextHolder.clearDataSource();
@@ -51,10 +51,10 @@ public class DatabaseComplexServiceImpl implements DatabaseComplexService {
     }
 
     @Override
-    public IPage<Map<String, Object>> retrieveTableDetails(QueryTableDetailsParamsDto queryTableDetailsParamsDto) {
-        DBContextHolder.setDataSource(queryTableDetailsParamsDto.getConnectionId());
-        IPage<Map<String, Object>> page = new Page<>(queryTableDetailsParamsDto.getPageNumber(), queryTableDetailsParamsDto.getPageSize());
-        IPage<Map<String, Object>> tableDetails = databaseDynamicService.retrieveTableDetails(page, queryTableDetailsParamsDto.getTableName());
+    public IPage<Map<String, Object>> retrieveTableDetails(TableDetailsParamsDto tableDetailsParamsDto) {
+        DBContextHolder.setDataSource(tableDetailsParamsDto.getConnectionId());
+        IPage<Map<String, Object>> page = new Page<>(tableDetailsParamsDto.getPageNumber(), tableDetailsParamsDto.getPageSize());
+        IPage<Map<String, Object>> tableDetails = databaseDynamicService.retrieveTableDetails(page, tableDetailsParamsDto.getTableName());
         DBContextHolder.clearDataSource();
         return tableDetails;
     }
@@ -63,6 +63,26 @@ public class DatabaseComplexServiceImpl implements DatabaseComplexService {
     public List<String> retrievePgDatabasesInfo(String id) {
         DatabaseConnectionEntity testConnectionEntity = databaseConnectionService.getDatabaseConnectionInfoById(id);
         return dynamicDataSource.getPgDatabases(testConnectionEntity);
+    }
+
+    @Override
+    public IPage<DatabaseConnectionDto> retrieveMyDatabaseConnectionInfo(QueryDatabaseConnectionParamsDto queryDatabaseConnectionParamsDto) {
+        return databaseConnectionService.getDatabaseConnectionPageByUid(queryDatabaseConnectionParamsDto);
+    }
+
+    @Override
+    public void addDatabaseConnectionInfo(DatabaseConnectionParamsDto databaseConnectionParamsDto) {
+        databaseConnectionService.addDatabaseConnection(BeanUtil.copyProperties(databaseConnectionParamsDto, DatabaseConnectionEntity.class));
+    }
+
+    @Override
+    public void deleteDatabaseConnectionInfo(String id) {
+        databaseConnectionService.deleteDatabaseConnection(id);
+    }
+
+    @Override
+    public void editDatabaseConnectionInfo(DatabaseConnectionParamsDto databaseConnectionParamsDto) {
+        databaseConnectionService.editDatabaseConnection(BeanUtil.copyProperties(databaseConnectionParamsDto, DatabaseConnectionEntity.class));
     }
 
     private List<DatabaseStructInfoDto> retrieveDatabaseStructInfo(DatabaseMetaData metaData, String type) {
@@ -109,11 +129,9 @@ public class DatabaseComplexServiceImpl implements DatabaseComplexService {
         try {
             ResultSet tableRet = null;
             if (type.equals(DatabaseConnectionConstant.CONNECTION_TYPE_MYSQL)) {
-                tableRet = metaData.getTables(databaseName, "%", "%",
-                        new String[]{"TABLE"});
+                tableRet = metaData.getTables(databaseName, "%", "%", new String[]{"TABLE"});
             } else if (type.equals(DatabaseConnectionConstant.CONNECTION_TYPE_PGSQL)) {
-                tableRet = metaData.getTables(null, databaseName, "%",
-                        new String[]{"TABLE"});
+                tableRet = metaData.getTables(null, databaseName, "%", new String[]{"TABLE"});
             }
 
             while (tableRet.next()) {

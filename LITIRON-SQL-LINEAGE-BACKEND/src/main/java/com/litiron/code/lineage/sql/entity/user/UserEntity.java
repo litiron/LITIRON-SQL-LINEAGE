@@ -1,4 +1,4 @@
-package com.litiron.code.lineage.sql.entity.database;
+package com.litiron.code.lineage.sql.entity.user;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -12,21 +12,23 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@TableName(value = "database_connection")
-public class DatabaseConnectionEntity {
+@TableName(value = "user")
+public class UserEntity {
     private String id;
-
-    private String ip;
-
-    private Integer port;
 
     private String userName;
 
     private String password;
 
-    private String connectionName;
+    private String nickName;
 
-    private String type;
+    private String avatar;
 
-    private String uId;
+    private String email;
+
+    private String address;
+
+    private Integer phone;
+
+    private String host;
 }

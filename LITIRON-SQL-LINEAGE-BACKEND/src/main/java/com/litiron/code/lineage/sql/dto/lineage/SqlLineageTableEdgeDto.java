@@ -22,6 +22,13 @@ public class SqlLineageTableEdgeDto {
     private String leftTableName;
 
     private String rightTableName;
+    /*
+     * 上游或者是下游数据
+     *
+     */
+    private String direction;
+
+    private String relationFiled;
 
     private List<Map<String, String>> joinFieldList = new ArrayList<>();
 }
