@@ -1,4 +1,6 @@
-package com.litiron.code.lineage.sql.dto.lineage;
+package com.litiron.code.lineage.sql.dto.lineage.table;
+
+import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableBaseDto;
 
 /**
  * @description: 用于sql解析后存储表的基本信息

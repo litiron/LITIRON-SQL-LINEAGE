@@ -1,6 +1,6 @@
-package com.litiron.code.lineage.sql.dto.lineage;
+package com.litiron.code.lineage.sql.dto.lineage.table;
 
-import com.litiron.code.lineage.sql.entity.SqlLineageNodeEntity;
+import com.litiron.code.lineage.sql.entity.table.SqlLineageTableNodeEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,7 +17,7 @@ import java.util.Map;
 @Getter
 public class SqlLineageEdgeDto {
 
-    private SqlLineageNodeEntity to;
+    private SqlLineageTableNodeEntity to;
 
     private String leftTableName;
 

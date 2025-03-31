@@ -1,14 +1,16 @@
-package com.litiron.code.lineage.sql.service;
+package com.litiron.code.lineage.sql.service.table;
 
 import com.litiron.code.lineage.sql.dto.ParsedTableMeta;
 import com.litiron.code.lineage.sql.dto.lineage.ParseRelationParamsDto;
+import com.litiron.code.lineage.sql.entity.table.SqlLineageTableNodeEntity;
 
 /**
- * @description: sql 血缘关系相关服务
+ * @description: 表级别服务接口定义
  * @author: Litiron
- * @create: 2024-06-08 10:01
+ * @create: 2025-03-30 19:09
  **/
-public interface SqlLineageService {
+public interface SqlLineageTableService {
+
 
     /**
      * 解析出依赖的表信息
@@ -33,4 +35,16 @@ public interface SqlLineageService {
      **/
     void parseTableDependency(ParseRelationParamsDto parseRelationParamsDto);
 
+    /**
+     * 清空血缘关系表
+     */
+    void truncateDependency();
+
+    /**
+     * 根据表节点id查询表相关的数据信息
+     *
+     * @param id 表节点id
+     * @return 表节点信息
+     */
+    SqlLineageTableNodeEntity findNodeWithAllRelationships(String id);
 }

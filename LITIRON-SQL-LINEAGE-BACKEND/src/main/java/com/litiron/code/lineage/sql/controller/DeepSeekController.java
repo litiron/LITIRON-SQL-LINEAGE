@@ -30,6 +30,7 @@ public class DeepSeekController {
             throw new RuntimeException("API调用失败", e);
         }
     }
+
     @Autowired
     public void setDeepSeekService(DeepseekService deepSeekService) {
         this.deepseekService = deepSeekService;

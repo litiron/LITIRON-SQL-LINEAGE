@@ -11,5 +11,7 @@ public interface TableConstants {
 
     Integer DEFAULT_CONNECTION_PORT = 3306;
 
-    String DEFAULT_DATABASE_NAME = "sql_lineage";
+    String DEFAULT_DATABASE_NAME = "sql_lineage_pg";
+
+    String DEFAULT_SCHEMA_NAME = "sql_lineage";
 }

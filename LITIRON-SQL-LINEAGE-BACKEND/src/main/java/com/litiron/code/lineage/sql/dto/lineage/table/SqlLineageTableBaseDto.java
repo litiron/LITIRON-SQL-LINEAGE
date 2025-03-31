@@ -1,4 +1,4 @@
-package com.litiron.code.lineage.sql.dto.lineage;
+package com.litiron.code.lineage.sql.dto.lineage.table;
 
 import com.litiron.code.lineage.sql.common.constants.TableConstants;
 import lombok.Getter;
@@ -19,7 +19,7 @@ public class SqlLineageTableBaseDto {
 
     private String connectionIp = TableConstants.DEFAULT_CONNECTION_IP;
 
-    private String schemaName;
+    private String schemaName = TableConstants.DEFAULT_SCHEMA_NAME;
 
     private Integer connectionPort = TableConstants.DEFAULT_CONNECTION_PORT;
 

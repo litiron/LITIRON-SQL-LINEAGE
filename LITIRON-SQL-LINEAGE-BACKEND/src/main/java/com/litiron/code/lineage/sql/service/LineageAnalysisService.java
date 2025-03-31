@@ -2,7 +2,7 @@ package com.litiron.code.lineage.sql.service;
 
 import com.litiron.code.lineage.sql.dto.database.DatabaseConnectionDto;
 import com.litiron.code.lineage.sql.dto.database.DatabaseStructInfoDto;
-import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableNodeDto;
+import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableNodeDto;
 import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableNodeParamsDto;
 
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.List;
  * @author: 李日红
  * @create: 2025/2/8 17:46
  */
-public interface LineageService {
+public interface LineageAnalysisService {
     /**
      * @description: 获取数据库类型
      * @return: java.util.List<java.lang.String>

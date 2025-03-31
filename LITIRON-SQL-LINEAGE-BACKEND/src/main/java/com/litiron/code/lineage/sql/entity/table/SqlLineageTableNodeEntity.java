@@ -1,7 +1,7 @@
-package com.litiron.code.lineage.sql.entity;
+package com.litiron.code.lineage.sql.entity.table;
 
 import com.litiron.code.lineage.sql.common.constants.TableConstants;
-import com.litiron.code.lineage.sql.config.Neo4jTableNodeGenerator;
+import com.litiron.code.lineage.sql.config.generator.Neo4jTableNodeGenerator;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
@@ -16,10 +16,10 @@ import java.util.List;
  * @author: Litiron
  * @create: 2024-07-02 22:00
  **/
-@Node(labels = "表信息")
+@Node(labels = "SqlLineageTableNodeEntity")
 @Getter
 @Setter
-public class SqlLineageNodeEntity {
+public class SqlLineageTableNodeEntity {
     /**
      * 唯一的id 由neo4j自动生成，应该也可以自定义
      */
@@ -39,6 +39,6 @@ public class SqlLineageNodeEntity {
 
     private String tableComment;
 
-    @Relationship(type = "joinRelationShip", direction = Relationship.Direction.OUTGOING)
-    private List<SqlLineageEdgeEntity> outRelationShip;
+    @Relationship(type = "SqlLineageTableEdgeEntity", direction = Relationship.Direction.OUTGOING)
+    private List<SqlLineageTableEdgeEntity> outRelationShip;
 }

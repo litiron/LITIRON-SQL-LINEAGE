@@ -1,4 +1,4 @@
-package com.litiron.code.lineage.sql.service.impl;
+package com.litiron.code.lineage.sql.service.table;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
@@ -10,45 +10,60 @@ import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.dialect.postgresql.visitor.PGSchemaStatVisitor;
 import com.alibaba.druid.stat.TableStat;
 import com.litiron.code.lineage.sql.common.BusinessException;
-import com.litiron.code.lineage.sql.dao.SqlLineageEdgeRepository;
-import com.litiron.code.lineage.sql.dao.SqlLineageNodeRepository;
+import com.litiron.code.lineage.sql.dao.table.SqlLineageTableEdgeRepository;
+import com.litiron.code.lineage.sql.dao.table.SqlLineageTableNodeRepository;
 import com.litiron.code.lineage.sql.dto.ParsedTableMeta;
 import com.litiron.code.lineage.sql.dto.database.DatabaseStructInfoDto;
 import com.litiron.code.lineage.sql.dto.database.TableStructureInfoDto;
 import com.litiron.code.lineage.sql.dto.lineage.ParseRelationParamsDto;
-import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableDto;
-import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableEdgeDto;
-import com.litiron.code.lineage.sql.entity.SqlLineageEdgeEntity;
-import com.litiron.code.lineage.sql.entity.SqlLineageNodeEntity;
+import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableDto;
+import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableEdgeDto;
 import com.litiron.code.lineage.sql.entity.database.DatabaseConnectionEntity;
-import com.litiron.code.lineage.sql.service.SqlLineageService;
+import com.litiron.code.lineage.sql.entity.table.SqlLineageTableEdgeEntity;
+import com.litiron.code.lineage.sql.entity.table.SqlLineageTableNodeEntity;
 import com.litiron.code.lineage.sql.service.database.DatabaseConnectionService;
+import com.litiron.code.lineage.sql.service.impl.DatabaseComplexServiceImpl;
 import com.litiron.code.lineage.sql.utils.TableNodeUtils;
-import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * @description:
+ * @description: 表级别服务接口定义
  * @author: Litiron
- * @create: 2024-06-08 10:02
+ * @create: 2025-03-30 19:09
  **/
 @Service
-@AllArgsConstructor
-public class SqlLineageServiceImpl implements SqlLineageService {
+@Slf4j
+public class SqlLineageTableServiceImpl implements SqlLineageTableService {
 
-    private final SqlLineageNodeRepository sqlLineageNodeRepository;
-    private final SqlLineageEdgeRepository sqlLineageEdgeRepository;
     private final DatabaseComplexServiceImpl databaseComplexService;
     private final DatabaseConnectionService databaseConnectionService;
+    private final SqlLineageTableNodeRepository sqlLineageTableNodeRepository;
+    private final SqlLineageTableEdgeRepository sqlLineageTableEdgeRepository;
+
+
+    @Autowired
+    public SqlLineageTableServiceImpl(DatabaseComplexServiceImpl databaseComplexService, DatabaseConnectionService databaseConnectionService,
+                                      SqlLineageTableNodeRepository sqlLineageTableNodeRepository, SqlLineageTableEdgeRepository sqlLineageTableEdgeRepository) {
+        this.databaseComplexService = databaseComplexService;
+        this.databaseConnectionService = databaseConnectionService;
+        this.sqlLineageTableNodeRepository = sqlLineageTableNodeRepository;
+        this.sqlLineageTableEdgeRepository = sqlLineageTableEdgeRepository;
+    }
 
     @Override
     public ParsedTableMeta parseRelationTables(ParseRelationParamsDto parseRelationParamsDto) {
         return obtainAllTables(parseRelationParamsDto);
+    }
+
+    @Override
+    public void truncateDependency() {
+        sqlLineageTableNodeRepository.truncateDependency();
     }
 
     /**
@@ -79,41 +94,45 @@ public class SqlLineageServiceImpl implements SqlLineageService {
             // 获取sql相关表信息
             ParsedTableMeta parsedTableMeta = obtainAllTables(parseRelationParamsDto);
             List<SqlLineageTableDto> sourceTableList = parsedTableMeta.getSourceTableList();
-            List<SqlLineageNodeEntity> sqlLineageNodeEntityList = BeanUtil.copyToList(sourceTableList, SqlLineageNodeEntity.class);
-            Map<String, SqlLineageNodeEntity> sqlLineageNodeEntityMap = sqlLineageNodeEntityList.stream()
-                    .collect(Collectors.toMap(SqlLineageNodeEntity::getTableName, Function.identity(), (pre, next) -> pre));
+            List<SqlLineageTableNodeEntity> sqlLineageTableNodeEntityList = BeanUtil.copyToList(sourceTableList, SqlLineageTableNodeEntity.class);
+            Map<String, SqlLineageTableNodeEntity> sqlLineageNodeEntityMap = sqlLineageTableNodeEntityList.stream()
+                    .collect(Collectors.toMap(SqlLineageTableNodeEntity::getTableName, Function.identity(), (pre, next) -> pre));
             // neo4j 存储
-            sqlLineageNodeEntityList.forEach(node -> {
-                List<SqlLineageEdgeEntity> outEdgeList = new ArrayList<>();
+            sqlLineageTableNodeEntityList.forEach(node -> {
+                List<SqlLineageTableEdgeEntity> outEdgeList = new ArrayList<>();
                 List<String> visitedKeyList = new ArrayList<>();
                 joinEdgeMap.forEach((key, value) -> {
                     if (key.contains(node.getTableName())) {
                         // 先简单判断唯一键是否存在，理论上后续应该还需要更新连接字段心
                         // todo
-                        SqlLineageEdgeEntity sqlLineageEdgeEntity = BeanUtil.copyProperties(value, SqlLineageEdgeEntity.class);
-                        Integer edgeCount = sqlLineageEdgeRepository.countByUniqueId(sqlLineageEdgeEntity.getUniqueId());
+                        SqlLineageTableEdgeEntity sqlLineageTableEdgeEntity = BeanUtil.copyProperties(value, SqlLineageTableEdgeEntity.class);
+                        Integer edgeCount = sqlLineageTableEdgeRepository.countByUniqueId(sqlLineageTableEdgeEntity.getUniqueId());
                         if (edgeCount > 0) {
                             return;
                         }
-                        sqlLineageEdgeEntity.setRelationFiled(JSONUtil.toJsonStr(value.getJoinFieldList()));
-                        sqlLineageEdgeEntity.setUniqueId();
+                        sqlLineageTableEdgeEntity.setRelationFiled(JSONUtil.toJsonStr(value.getJoinFieldList()));
+                        sqlLineageTableEdgeEntity.setUniqueId();
                         visitedKeyList.add(key);
-                        outEdgeList.add(sqlLineageEdgeEntity);
+                        outEdgeList.add(sqlLineageTableEdgeEntity);
                         // 找到边之后要将另一边的node添加至to
                         if (value.getLeftTableName().equals(node.getTableName())) {
-                            sqlLineageEdgeEntity.setTo(sqlLineageNodeEntityMap.get(value.getRightTableName()));
+                            sqlLineageTableEdgeEntity.setTo(sqlLineageNodeEntityMap.get(value.getRightTableName()));
                         } else {
-                            sqlLineageEdgeEntity.setTo(sqlLineageNodeEntityMap.get(value.getLeftTableName()));
+                            sqlLineageTableEdgeEntity.setTo(sqlLineageNodeEntityMap.get(value.getLeftTableName()));
                         }
                     }
                 });
                 node.setOutRelationShip(outEdgeList);
                 visitedKeyList.forEach(joinEdgeMap::remove);
-                sqlLineageNodeRepository.save(node);
+                sqlLineageTableNodeRepository.save(node);
             });
         }
     }
 
+    @Override
+    public SqlLineageTableNodeEntity findNodeWithAllRelationships(String id) {
+        return sqlLineageTableNodeRepository.findNodeWithAllRelationships(id);
+    }
 
     private List<SQLStatement> parsePgStatements(String sql) {
         return SQLUtils.parseStatements(sql, DbType.postgresql);
@@ -134,6 +153,7 @@ public class SqlLineageServiceImpl implements SqlLineageService {
         return parsedTableMeta;
     }
 
+
     private void distinguishTableType(String connectionId, String pgDbName, List<SqlLineageTableDto> selectTableList, List<SqlLineageTableDto> insertTableList, PGSchemaStatVisitor pgSchemaStatVisitor) {
         Map<TableStat.Name, TableStat> allTables = pgSchemaStatVisitor.getTables();
         allTables.forEach((k, v) -> {
@@ -152,9 +172,10 @@ public class SqlLineageServiceImpl implements SqlLineageService {
         });
     }
 
+
     private void populateSqlLineageDto(SqlLineageTableDto node, String connectionId, String pgDbName, String[] split) {
-        List<DatabaseStructInfoDto> databaseStructInfoDtos = databaseComplexService.updateDatabaseConnection(connectionId, pgDbName);
-        List<DatabaseStructInfoDto> DbList = databaseStructInfoDtos.stream().filter(db -> db.getDatabaseName().equals(split[0])).findAny().stream().toList();
+        List<DatabaseStructInfoDto> databaseStructInfoDtoList = databaseComplexService.updateDatabaseConnection(connectionId, pgDbName);
+        List<DatabaseStructInfoDto> DbList = databaseStructInfoDtoList.stream().filter(db -> db.getDatabaseName().equals(split[0])).findAny().stream().toList();
         if (CollectionUtil.isEmpty(DbList)) {
             throw new BusinessException("该数据库不存在");
         }
@@ -176,5 +197,4 @@ public class SqlLineageServiceImpl implements SqlLineageService {
         }
         node.setTableName(split[1]);
     }
-
 }

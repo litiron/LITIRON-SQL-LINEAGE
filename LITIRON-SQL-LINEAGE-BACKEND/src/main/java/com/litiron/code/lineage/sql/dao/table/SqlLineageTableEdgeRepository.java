@@ -1,7 +1,6 @@
-package com.litiron.code.lineage.sql.dao;
+package com.litiron.code.lineage.sql.dao.table;
 
-import com.litiron.code.lineage.sql.entity.SqlLineageEdgeEntity;
-import com.litiron.code.lineage.sql.entity.SqlLineageNodeEntity;
+import com.litiron.code.lineage.sql.entity.table.SqlLineageTableEdgeEntity;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.stereotype.Repository;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Repository;
  * @create: 2024-07-02 22:03
  **/
 @Repository
-public interface SqlLineageEdgeRepository extends Neo4jRepository<SqlLineageEdgeEntity, String> {
+public interface SqlLineageTableEdgeRepository extends Neo4jRepository<SqlLineageTableEdgeEntity, String> {
 
     /**
      * 根据唯一id查询

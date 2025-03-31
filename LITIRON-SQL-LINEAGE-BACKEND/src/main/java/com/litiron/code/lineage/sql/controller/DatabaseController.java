@@ -106,8 +106,8 @@ public class DatabaseController {
     @GetMapping("/connection/update")
     public Rest<?> updateDatabaseConnection(@RequestParam(value = "id") String id, @RequestParam(value = "pgDbName", defaultValue = "", required = false) String pgDbName) {
         try {
-            List<DatabaseStructInfoDto> databaseStructInfoDtos = databaseComplexService.updateDatabaseConnection(id, pgDbName);
-            List<DatabaseStructInfoVo> databaseStructInfoVos = BeanUtil.copyToList(databaseStructInfoDtos, DatabaseStructInfoVo.class);
+            List<DatabaseStructInfoDto> databaseStructInfoDtoList = databaseComplexService.updateDatabaseConnection(id, pgDbName);
+            List<DatabaseStructInfoVo> databaseStructInfoVos = BeanUtil.copyToList(databaseStructInfoDtoList, DatabaseStructInfoVo.class);
             return Rest.success(databaseStructInfoVos);
         } catch (Exception e) {
             log.error("Update database connection error,id is {}", id, e);

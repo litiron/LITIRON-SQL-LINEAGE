@@ -1,5 +1,7 @@
-package com.litiron.code.lineage.sql.dto.lineage;
+package com.litiron.code.lineage.sql.dto.lineage.table;
 
+import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableBaseDto;
+import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableEdgeDto;
 import lombok.Getter;
 import lombok.Setter;
 

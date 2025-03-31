@@ -1,4 +1,4 @@
-package com.litiron.code.lineage.sql.entity;
+package com.litiron.code.lineage.sql.entity.table;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +14,7 @@ import org.springframework.data.neo4j.core.schema.TargetNode;
 @RelationshipProperties
 @Setter
 @Getter
-public class SqlLineageEdgeEntity {
+public class SqlLineageTableEdgeEntity {
 
     @RelationshipId
     private String id;
@@ -22,7 +22,7 @@ public class SqlLineageEdgeEntity {
      * 目标结点
      */
     @TargetNode
-    private SqlLineageNodeEntity to;
+    private SqlLineageTableNodeEntity to;
 
     private String uniqueId;
 

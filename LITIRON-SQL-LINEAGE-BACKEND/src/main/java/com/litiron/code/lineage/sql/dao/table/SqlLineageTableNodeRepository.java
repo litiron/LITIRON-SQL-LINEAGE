@@ -1,6 +1,6 @@
-package com.litiron.code.lineage.sql.dao;
+package com.litiron.code.lineage.sql.dao.table;
 
-import com.litiron.code.lineage.sql.entity.SqlLineageNodeEntity;
+import com.litiron.code.lineage.sql.entity.table.SqlLineageTableNodeEntity;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.stereotype.Repository;
@@ -11,7 +11,11 @@ import org.springframework.stereotype.Repository;
  * @create: 2024-07-02 22:03
  **/
 @Repository
-public interface SqlLineageNodeRepository extends Neo4jRepository<SqlLineageNodeEntity, String> {
+public interface SqlLineageTableNodeRepository extends Neo4jRepository<SqlLineageTableNodeEntity, String> {
+
+    @Query("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r")
+    void truncateDependency();
+
 
     @Query("MATCH (n:表信息) WHERE n.id = $id " +
             "OPTIONAL MATCH (n)-[outRel:joinRelationShip]->(outNode) " +      // 出边（下游）
@@ -21,5 +25,5 @@ public interface SqlLineageNodeRepository extends Neo4jRepository<SqlLineageNode
             "COLLECT(outNode) AS downstreamNodes, " +
             "COLLECT(inRel) AS incomingRelationships, " +
             "COLLECT(inNode) AS upstreamNodes")
-    SqlLineageNodeEntity findNodeWithAllRelationships(String id);
+    SqlLineageTableNodeEntity findNodeWithAllRelationships(String id);
 }
