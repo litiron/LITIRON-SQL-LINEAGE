@@ -24,11 +24,6 @@ import java.io.IOException;
 @Slf4j
 public class DeepseekServiceImpl implements DeepseekService {
     private WebClient deepSeekWebClient;
-    private ObjectMapper objectMapper = new ObjectMapper();
-    @Value("${deepseek.api.url}")
-    private String apiUrl;
-    @Value("${deepseek.api.key}")
-    private String apiKey;
 
     public SseEmitter sendStreamRequest(DeepseekRequestDto request) {
         SseEmitter emitter = new SseEmitter();
@@ -66,12 +61,6 @@ public class DeepseekServiceImpl implements DeepseekService {
         }
         int lastSentenceEnd = Math.max(buffer.lastIndexOf("。"), Math.max(buffer.lastIndexOf("！"), Math.max(buffer.lastIndexOf("？"), buffer.lastIndexOf("\n"))));
         return lastSentenceEnd != -1 ? lastSentenceEnd + 1 : -1;
-    }
-
-
-    @Autowired
-    public void setObjectMapper(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
     }
 
     @Autowired

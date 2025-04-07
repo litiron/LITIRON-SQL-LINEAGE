@@ -5,10 +5,12 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.litiron.code.lineage.sql.common.BusinessException;
 import com.litiron.code.lineage.sql.common.Rest;
+import com.litiron.code.lineage.sql.dao.table.SqlLineageTableEdgeRepository;
 import com.litiron.code.lineage.sql.dto.database.DatabaseConnectionDto;
 import com.litiron.code.lineage.sql.dto.database.DatabaseStructInfoDto;
 import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableNodeParamsDto;
 import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableNodeDto;
+import com.litiron.code.lineage.sql.entity.table.SqlLineageTableEdgeEntity;
 import com.litiron.code.lineage.sql.service.LineageAnalysisService;
 import com.litiron.code.lineage.sql.vo.database.DatabaseConnectionVo;
 import com.litiron.code.lineage.sql.vo.database.DatabaseStructInfoVo;
@@ -30,6 +32,14 @@ import java.util.List;
 public class LineageAnalysisController {
 
     private LineageAnalysisService lineageAnalysisService;
+    @Autowired
+    private SqlLineageTableEdgeRepository sqlLineageTableEdgeRepository;
+
+    @GetMapping()
+    public Rest<?> retrieveLineageAnalysisInfo() {
+        List<SqlLineageTableEdgeEntity> upStream = sqlLineageTableEdgeRepository.findUpStream("47.120.71.217:sql_lineage:null:test");
+        return Rest.success();
+    }
 
     @GetMapping("/retrieve/type")
     public Rest<List<String>> retrieveDatabaseTypeList() {

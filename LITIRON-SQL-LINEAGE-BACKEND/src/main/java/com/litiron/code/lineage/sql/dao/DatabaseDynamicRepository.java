@@ -1,8 +1,8 @@
 package com.litiron.code.lineage.sql.dao;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.Map;
 
@@ -12,7 +12,7 @@ import java.util.Map;
  * @create: 2024/12/11 22:19
  */
 
-@Repository
+@Mapper
 public interface DatabaseDynamicRepository {
 
     /**

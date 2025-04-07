@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.6</version>
+        <version>3.2.3</version>
         <relativePath/>
     </parent>
     <groupId>com.litiron.code.lineage</groupId>
@@ -20,7 +20,6 @@
         <litiron.code.base.version>0.0.1-SNAPSHOT</litiron.code.base.version>
         <mysql.connector.version>8.0.32</mysql.connector.version>
         <alibaba.druid.version>1.2.8</alibaba.druid.version>
-        <hutool.version>5.8.12</hutool.version>
         <spring.cloud.version>2022.0.5</spring.cloud.version>
         <mybatisPlus.version>3.5.9</mybatisPlus.version>
         <mysql.version>8.0.13</mysql.version>
@@ -28,6 +27,7 @@
         <log4j.version>1.2.17</log4j.version>
         <druid.version>1.1.23</druid.version>
         <postgresql.version>42.6.2</postgresql.version>
+        <langchain4j.version>1.0.0-beta2</langchain4j.version>
     </properties>
 
     <dependencyManagement>
@@ -60,11 +60,6 @@
                 <version>${mybatisPlus.version}</version>
             </dependency>
             <dependency>
-                <groupId>cn.hutool</groupId>
-                <artifactId>hutool-all</artifactId>
-                <version>${hutool.version}</version>  <!-- 版本号可以根据需要调整 -->
-            </dependency>
-            <dependency>
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
                 <version>${log4j.version}</version>
@@ -83,6 +78,11 @@
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-jsqlparser-4.9</artifactId>
                 <version>${mybatisPlus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
+                <version>${langchain4j.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

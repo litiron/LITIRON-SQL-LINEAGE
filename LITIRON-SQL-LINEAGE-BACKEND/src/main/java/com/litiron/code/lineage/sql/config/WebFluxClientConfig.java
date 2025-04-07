@@ -13,10 +13,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class WebFluxClientConfig {
 
-    @Value("${deepseek.api.url}")
+    @Value("${langchain4j.openai.chat-model.base-url}")
     private String apiUrl;
 
-    @Value("${deepseek.api.key}")
+    @Value("${langchain4j.openai.chat-model.api-key}")
     private String apiKey;
 
     @Bean(value = "deepSeekWebClient")

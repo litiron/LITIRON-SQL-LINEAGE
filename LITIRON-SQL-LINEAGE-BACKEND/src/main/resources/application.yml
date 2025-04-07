@@ -60,9 +60,14 @@ logging:
     org:
       springframework:
         data:
-          neo4j: DEBUG
-deepseek:
-  api:
-    key: "sk-dec9f63bdacf455999064dd1b87dd256"
-    url: "https://api.deepseek.com/v1/chat/completions"
+          neo4j: debug
+
+langchain4j:
+  open-ai:
+    chat-model:
+      api-key: "sk-dec9f63bdacf455999064dd1b87dd256"
+      log-requests: true
+      log-responses: true
+      model-name: "deepseek-reasoner"
+      base-url: "https://api.deepseek.com/v1/chat/completions"
 

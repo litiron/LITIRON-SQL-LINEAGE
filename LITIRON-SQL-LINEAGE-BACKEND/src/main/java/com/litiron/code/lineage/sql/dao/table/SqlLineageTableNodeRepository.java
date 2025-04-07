@@ -3,14 +3,12 @@ package com.litiron.code.lineage.sql.dao.table;
 import com.litiron.code.lineage.sql.entity.table.SqlLineageTableNodeEntity;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
-import org.springframework.stereotype.Repository;
 
 /**
  * @description: 结点dao层定义
  * @author: Litiron
  * @create: 2024-07-02 22:03
  **/
-@Repository
 public interface SqlLineageTableNodeRepository extends Neo4jRepository<SqlLineageTableNodeEntity, String> {
 
     @Query("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r")
