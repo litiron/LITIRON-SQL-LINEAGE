@@ -48,6 +48,13 @@ spring:
       host: 47.120.71.217
       port: 6379
 
+## rocket mq
+rocketmq:
+  name-server: 120.26.221.190:9876
+  consumer:
+    topic: sql-collector-topic
+    group: sql-collector-group
+
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
@@ -58,6 +65,8 @@ mybatis-plus:
 logging:
   level:
     org:
+      apache:
+        rocketmq: debug
       springframework:
         data:
           neo4j: debug

@@ -14,10 +14,7 @@
     <name>litiron-sql-lineage</name>
     <properties>
         <java.version>21</java.version>
-        <all.in.one.base.version>0.0.1-SNAPSHOT</all.in.one.base.version>
-        <all.in.one.workflow.version>0.0.1-SNAPSHOT</all.in.one.workflow.version>
-        <all.in.one.user.version>0.0.1-SNAPSHOT</all.in.one.user.version>
-        <litiron.code.base.version>0.0.1-SNAPSHOT</litiron.code.base.version>
+        <litiron.code.lineage.version>0.0.1-SNAPSHOT</litiron.code.lineage.version>
         <mysql.connector.version>8.0.32</mysql.connector.version>
         <alibaba.druid.version>1.2.8</alibaba.druid.version>
         <spring.cloud.version>2022.0.5</spring.cloud.version>
@@ -32,6 +29,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.litiron.code.lineage</groupId>
+                <artifactId>litiron-sql-lineage-collector</artifactId>
+                <version>${litiron.code.lineage.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid</artifactId>
@@ -89,5 +91,6 @@
 
     <modules>
         <module>litiron-sql-lineage-backend</module>
+        <module>litiron-sql-lineage-collector</module>
     </modules>
 </project>
