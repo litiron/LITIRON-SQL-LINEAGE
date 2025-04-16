@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
  * @author: Litiron
  * @create: 2025-04-13 14:53
  **/
-@Component
-@RocketMQMessageListener(nameServer = "${rocketmq.name-server}", topic = "${rocketmq.consumer.topic}", consumerGroup = "${rocketmq.consumer.group}")
+//@Component
+//@RocketMQMessageListener(nameServer = "${rocketmq.name-server}", topic = "${rocketmq.consumer.topic}", consumerGroup = "${rocketmq.consumer.group}")
 public class SqlParserListener implements RocketMQListener<Object> {
 
 

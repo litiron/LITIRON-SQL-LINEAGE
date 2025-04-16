@@ -45,4 +45,23 @@ public class SqlLineageTableColDepDto extends SqlLineageTableBaseDto {
         this.isSubQuery = isSubQuery;
         return this;
     }
+
+    public boolean isSubQuery() {
+        return isSubQuery;
+    }
+
+    public SqlLineageTableColDepDto setSubQuery(boolean subQuery) {
+        isSubQuery = subQuery;
+        return this;
+    }
+
+    public SqlLineageTableColDepDto setParentTableName(String tableName) {
+        super.setTableName(tableName);
+        return this;
+    }
+
+    public SqlLineageTableColDepDto setParentDatabase(String databaseName) {
+        super.setDatabaseName(databaseName);
+        return this;
+    }
 }

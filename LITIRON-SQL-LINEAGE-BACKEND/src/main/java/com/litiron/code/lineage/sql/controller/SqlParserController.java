@@ -5,12 +5,15 @@ import com.litiron.code.lineage.sql.common.BusinessException;
 import com.litiron.code.lineage.sql.common.Rest;
 import com.litiron.code.lineage.sql.dto.ParsedTableMeta;
 import com.litiron.code.lineage.sql.dto.lineage.ParseRelationParamsDto;
+import com.litiron.code.lineage.sql.dto.lineage.column.ParsedColumnMetaDto;
 import com.litiron.code.lineage.sql.service.SqlLineageParseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * @description: sql解析控制器
@@ -31,15 +34,20 @@ public class SqlParserController {
     }
 
     @PostMapping("/parse/table/dependency")
-    public Rest<ParsedTableMeta> parseTableDependency(@RequestBody ParseRelationParamsDto parseRelationParamsDto) {
+    public Rest<?> parseTableDependency(@RequestBody ParseRelationParamsDto parseRelationParamsDto) {
         validateParseParams(parseRelationParamsDto);
         sqlLineageParseService.parseTableDependency(parseRelationParamsDto);
         return Rest.success("添加成功");
     }
 
-    @PostMapping("/parse/field/dependency")
-    public Rest<ParsedTableMeta> parseColumnDependency(@RequestBody ParseRelationParamsDto parseRelationParamsBo) {
-        sqlLineageParseService.parseColumnDependency(parseRelationParamsBo.getSql());
+    @PostMapping("/parse/relation/column")
+    public Rest<List<ParsedColumnMetaDto>> parseRelationColumn(@RequestBody ParseRelationParamsDto parseRelationParamsDto) {
+        return Rest.success(sqlLineageParseService.parseColumnRelation(parseRelationParamsDto));
+    }
+
+    @PostMapping("/parse/column/dependency")
+    public Rest<?> parseColumnDependency(@RequestBody ParseRelationParamsDto parseRelationParamsDto) {
+        sqlLineageParseService.parseColumnDependency(parseRelationParamsDto);
         return Rest.success();
     }
 

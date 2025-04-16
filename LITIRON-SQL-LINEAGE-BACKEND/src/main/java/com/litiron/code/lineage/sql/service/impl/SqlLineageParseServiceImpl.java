@@ -2,11 +2,14 @@ package com.litiron.code.lineage.sql.service.impl;
 
 import com.litiron.code.lineage.sql.dto.ParsedTableMeta;
 import com.litiron.code.lineage.sql.dto.lineage.ParseRelationParamsDto;
+import com.litiron.code.lineage.sql.dto.lineage.column.ParsedColumnMetaDto;
 import com.litiron.code.lineage.sql.service.SqlLineageParseService;
 import com.litiron.code.lineage.sql.service.column.SqlLineageColumnService;
 import com.litiron.code.lineage.sql.service.table.SqlLineageTableService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * @description: sql血缘解析服务管管
@@ -42,8 +45,14 @@ public class SqlLineageParseServiceImpl implements SqlLineageParseService {
     }
 
     @Override
-    public void parseColumnDependency(String sql) {
-        sqlLineageColumnService.parseColumnDependency(sql);
+    public void parseColumnDependency(ParseRelationParamsDto parseRelationParamsDto) {
+        sqlLineageColumnService.parseColumnDependency(parseRelationParamsDto);
+    }
+
+
+    @Override
+    public List<ParsedColumnMetaDto> parseColumnRelation(ParseRelationParamsDto parseRelationParamsDto) {
+        return sqlLineageColumnService.parseColumnRelation(parseRelationParamsDto);
     }
 
     @Override

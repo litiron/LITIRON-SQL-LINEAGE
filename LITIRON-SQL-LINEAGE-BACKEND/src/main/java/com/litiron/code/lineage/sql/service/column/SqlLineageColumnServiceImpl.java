@@ -8,12 +8,17 @@ import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.expr.*;
 import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGInsertStatement;
+import com.alibaba.druid.sql.visitor.SQLASTVisitorAdapter;
 import com.litiron.code.lineage.sql.common.constants.TableConstants;
 import com.litiron.code.lineage.sql.dao.column.SqlLineageColumnRepository;
+import com.litiron.code.lineage.sql.dto.lineage.ParseRelationParamsDto;
+import com.litiron.code.lineage.sql.dto.lineage.column.ParsedColumnMetaDto;
 import com.litiron.code.lineage.sql.dto.lineage.column.SqlLineageColumnDependencyDto;
 import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableColDepDto;
 import com.litiron.code.lineage.sql.entity.column.SqlLineageColumnEdgeEntity;
 import com.litiron.code.lineage.sql.entity.column.SqlLineageColumnNodeEntity;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,13 +47,175 @@ public class SqlLineageColumnServiceImpl implements SqlLineageColumnService {
 
 
     @Override
-    public void parseColumnDependency(String sql) {
-        new ColumnInnerParser().parseColumnDependency(sql);
+    public void parseColumnDependency(ParseRelationParamsDto parseRelationParamsDto) {
+        new ColumnInnerParser(parseRelationParamsDto.getConnectionIp(), parseRelationParamsDto.getPort(), parseRelationParamsDto.getDatabaseType())
+                .parseColumnDependency(parseRelationParamsDto.getSql());
     }
 
+    @Override
+    public List<ParsedColumnMetaDto> parseColumnRelation(ParseRelationParamsDto parseRelationParamsDto) {
+        return new ColumnInnerParser(parseRelationParamsDto.getConnectionIp(), parseRelationParamsDto.getPort(), parseRelationParamsDto.getDatabaseType())
+                .parseColumnMeta(parseRelationParamsDto.getSql());
+    }
+
+    @Getter
+    @Setter
     class ColumnInnerParser {
         // 别名管理待优化 todo 嵌套子查询导致别名覆盖
         private Map<String, SqlLineageTableColDepDto> aliasTableMap = new HashMap<>(16);
+
+        private String connectionIp;
+
+        private Integer port;
+
+        private String databaseName;
+
+        private String databaseType;
+
+        public ColumnInnerParser(String connectionIp, Integer port, String databaseType) {
+            this.connectionIp = connectionIp;
+            this.port = port;
+            this.databaseType = databaseType;
+        }
+
+        public List<ParsedColumnMetaDto> parseColumnMeta(String sql) {
+            List<ParsedColumnMetaDto> columns = new ArrayList<>();
+            // 解析SQL语句
+            List<SQLStatement> sqlStatements = parsePgStatements(sql);
+            // 解析SQL语句
+            for (SQLStatement stmt : sqlStatements) {
+                if (stmt instanceof SQLSelectStatement select) {
+                    handleSelectStatement(select.getSelect().getQuery(), columns);
+                } else if (stmt instanceof SQLInsertStatement) {
+                    handleInsertStatement((SQLInsertStatement) stmt, columns);
+                } else if (stmt instanceof SQLUpdateStatement) {
+                    handleUpdateStatement((SQLUpdateStatement) stmt, columns);
+                } else if (stmt instanceof SQLDeleteStatement) {
+                    handleDeleteStatement((SQLDeleteStatement) stmt, columns);
+                }
+            }
+            // 去除一些重复信息，有些可能因为解析顺序没有拿到alias对应的表信息，如果要完善应当还需要再增一个当前处理不到的集合，在这个地方进行最后的处理
+            columns = columns.stream().filter(col -> StrUtil.isNotBlank(col.getTableName())).collect(Collectors.toList());
+            // 还需要进行去重，根据数据库+表+字段名（简单一点这里先不做处理）
+            // todo 通过当前类的connectionIp和port去查看数据库 填充数据库字段表名批注信息
+            return columns;
+        }
+
+
+        private void handleSelectStatement(SQLSelectQuery query, List<ParsedColumnMetaDto> columns) {
+            if (query instanceof SQLSelectQueryBlock queryBlock) {
+                // 处理SELECT项
+                for (SQLSelectItem item : queryBlock.getSelectList()) {
+                    if (item.getExpr() instanceof SQLPropertyExpr expr) {
+                        if (expr.getOwner() instanceof SQLIdentifierExpr) {
+                            addColumn(columns, this.getDatabaseName(), expr.getName(), item.getAlias());
+                        }
+                    }
+                }
+                // 处理FROM子句
+                processTableSource(queryBlock.getFrom(), columns);
+            }
+        }
+
+        private void handleInsertStatement(SQLInsertStatement stmt, List<ParsedColumnMetaDto> columns) {
+            // 处理目标表
+            String database = stmt.getTableSource().getSchema();
+            String table = stmt.getTableName().getSimpleName();
+
+            // 处理插入的字段
+            for (SQLExpr column : stmt.getColumns()) {
+                String columnName = column.toString().replace("`", "");
+                addColumn(columns, database, table, columnName);
+            }
+
+            // 如果有SELECT子句，处理来源字段
+            if (stmt.getQuery() != null) {
+                handleSelectStatement(stmt.getQuery().getQuery(), columns);
+            }
+        }
+
+        private void handleUpdateStatement(SQLUpdateStatement stmt, List<ParsedColumnMetaDto> columns) {
+            String database = stmt.getTableSource().toString();
+            String table = stmt.getTableName().getSimpleName();
+
+            // 处理更新的字段
+            for (SQLUpdateSetItem item : stmt.getItems()) {
+                if (item.getColumn() instanceof SQLIdentifierExpr) {
+                    String columnName = ((SQLIdentifierExpr) item.getColumn()).getName();
+                    addColumn(columns, database, table, columnName);
+                }
+            }
+
+            // 处理WHERE子句中的字段
+            if (stmt.getWhere() != null) {
+                processWhereClause(stmt.getWhere(), columns);
+            }
+        }
+
+        private void handleDeleteStatement(SQLDeleteStatement stmt, List<ParsedColumnMetaDto> columns) {
+            // 处理WHERE子句中的字段
+            if (stmt.getWhere() != null) {
+                processWhereClause(stmt.getWhere(), columns);
+            }
+        }
+
+
+        private void processTableSource(SQLTableSource tableSource, List<ParsedColumnMetaDto> columns) {
+            if (tableSource instanceof SQLJoinTableSource join) {
+                processTableSource(join.getLeft(), columns);
+                processTableSource(join.getRight(), columns);
+
+                // 处理JOIN条件
+                if (join.getCondition() != null) {
+                    processWhereClause(join.getCondition(), columns);
+                }
+            } else if (tableSource instanceof SQLSubqueryTableSource subQuery) {
+                String alias = subQuery.getAlias();
+                // 标记为临时表
+                aliasTableMap.put(alias, new SqlLineageTableColDepDto().setSubQuery(true));
+                handleSelectStatement(subQuery.getSelect().getQuery(), columns);
+
+            } else if (tableSource instanceof SQLExprTableSource table) {
+                // 记录基础表信息，可用于后续解析字段所属表
+                String database = table.getSchema();
+                String tableName = table.getName().getSimpleName();
+                String alias = table.getAlias();
+                // 可以存储表别名映射关系，用于解析字段所属表
+                if (alias != null) {
+                    aliasTableMap.put(alias, new SqlLineageTableColDepDto()
+                            .setParentTableName(tableName)
+                            .setParentDatabase(database));
+                }
+            }
+        }
+
+        private void processWhereClause(SQLExpr where, List<ParsedColumnMetaDto> columns) {
+            Map<String, SqlLineageTableColDepDto> tmp = this.aliasTableMap;
+            // 使用访问者模式收集WHERE子句中的字段
+            where.accept(new SQLASTVisitorAdapter() {
+                @Override
+                public boolean visit(SQLPropertyExpr x) {
+                    if (x.getOwner() instanceof SQLIdentifierExpr) {
+                        String tableAlias = ((SQLIdentifierExpr) x.getOwner()).getName();
+                        SqlLineageTableColDepDto table = tmp.getOrDefault(tableAlias, new SqlLineageTableColDepDto());
+                        if (table.isSubQuery()) {
+                            return true;
+                        }
+                        addColumn(columns, table.getDatabaseName(), table.getTableName(), x.getName());
+                    }
+                    return true;
+                }
+            });
+        }
+
+        private void addColumn(List<ParsedColumnMetaDto> columns, String database,
+                               String table, String column) {
+            columns.add(ParsedColumnMetaDto.builder()
+                    .databaseName(database)
+                    .tableName(table)
+                    .columnName(column)
+                    .build());
+        }
 
         // 解析SQL语句中的字段依赖关系
         public void parseColumnDependency(String sql) {
@@ -84,6 +251,8 @@ public class SqlLineageColumnServiceImpl implements SqlLineageColumnService {
                         SqlLineageColumnNodeEntity root = new SqlLineageColumnNodeEntity();
                         root.setSchemaName(targetSchema);
                         root.setTableName(targetTable);
+                        root.setConnectionIp(this.getConnectionIp());
+                        root.setPort(this.getPort());
                         root.setDatabaseName(StrUtil.isBlank(catalog) ? TableConstants.DEFAULT_DATABASE_NAME : catalog);
                         root.setDatabaseType(DbType.postgresql.toString());
                         root.setColumnName(column.toString().replaceAll("`", ""));

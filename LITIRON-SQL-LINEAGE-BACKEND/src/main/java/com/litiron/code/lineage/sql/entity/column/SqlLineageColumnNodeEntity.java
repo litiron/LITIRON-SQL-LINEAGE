@@ -28,6 +28,10 @@ public class SqlLineageColumnNodeEntity {
     @GeneratedValue(generatorClass = Neo4jColumnNodeGenerator.class)
     private String id;
 
+    private String connectionIp;
+
+    private Integer port;
+
     private String databaseName;
 
     private String schemaName;

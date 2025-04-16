@@ -12,6 +12,9 @@ import lombok.Setter;
 @Setter
 public class ParseRelationParamsDto {
     private String sql;
+    private String databaseType;
+    private String connectionIp;
+    private Integer port;
     private String connectionId;
     private String pgDbName;
 }
