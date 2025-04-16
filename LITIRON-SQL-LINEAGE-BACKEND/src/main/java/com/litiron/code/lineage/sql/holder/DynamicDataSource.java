@@ -246,7 +246,7 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
         String password = dataSource.getPassword();
         String url = "";
         String driveClass = "";
-        if (dataSource.getType().equals("mysql")) {
+        if (dataSource.getType().equals(DatabaseConnectionConstant.CONNECTION_TYPE_MYSQL)) {
             url = "jdbc:mysql://" + dataSource.getIp() + ":" + dataSource.getPort() + "?useSSL=false&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&serverTimezone=GMT%2B8";
             driveClass = "com.mysql.cj.jdbc.Driver";
         } else {

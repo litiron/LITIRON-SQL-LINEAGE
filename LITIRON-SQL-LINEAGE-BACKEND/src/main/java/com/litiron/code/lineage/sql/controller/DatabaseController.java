@@ -117,7 +117,7 @@ public class DatabaseController {
 
     @PostMapping("/retrieve/table/details")
     public Rest<?> getTableDetails(@RequestBody TableDetailsParamsDto tableDetailsParamsDto) {
-        IPage<Map<String, Object>> tableDetails = databaseComplexService.retrieveTableDetails(tableDetailsParamsDto);
+        IPage<Map<String, Object>> tableDetails = databaseComplexService.retrieveTableDetailsByPage(tableDetailsParamsDto);
 
         return Rest.success(tableDetails.getRecords(), tableDetails.getTotal());
     }

@@ -1,13 +1,11 @@
 package com.litiron.code.lineage.sql.service.deepseek.impl;
 
 import cn.hutool.json.JSONUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.litiron.code.lineage.sql.dto.deepseek.DeepseekRequestDto;
 import com.litiron.code.lineage.sql.dto.deepseek.DeepseekResponseDto;
 import com.litiron.code.lineage.sql.service.deepseek.DeepseekService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;

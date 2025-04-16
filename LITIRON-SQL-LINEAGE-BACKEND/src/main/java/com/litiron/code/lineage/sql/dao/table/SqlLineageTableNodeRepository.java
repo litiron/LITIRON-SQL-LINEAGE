@@ -15,9 +15,9 @@ public interface SqlLineageTableNodeRepository extends Neo4jRepository<SqlLineag
     void truncateDependency();
 
 
-    @Query("MATCH (n:表信息) WHERE n.id = $id " +
-            "OPTIONAL MATCH (n)-[outRel:joinRelationShip]->(outNode) " +      // 出边（下游）
-            "OPTIONAL MATCH (inNode)-[inRel:joinRelationShip]->(n) " +        // 入边（上游）
+    @Query("MATCH (n) WHERE n.id = $id " +
+            "OPTIONAL MATCH (n)-[outRel:SqlLineageTableEdgeEntity]->(outNode) " +      // 出边（下游）
+            "OPTIONAL MATCH (inNode)-[inRel:SqlLineageTableEdgeEntity]->(n) " +        // 入边（上游）
             "RETURN n, " +
             "COLLECT(outRel) AS outgoingRelationships, " +
             "COLLECT(outNode) AS downstreamNodes, " +

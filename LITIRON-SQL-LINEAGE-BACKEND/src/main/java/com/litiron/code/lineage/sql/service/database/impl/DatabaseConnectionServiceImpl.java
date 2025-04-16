@@ -13,7 +13,6 @@ import com.litiron.code.lineage.sql.dto.database.DatabaseConnectionDto;
 import com.litiron.code.lineage.sql.dto.database.QueryDatabaseConnectionParamsDto;
 import com.litiron.code.lineage.sql.entity.database.DatabaseConnectionEntity;
 import com.litiron.code.lineage.sql.service.database.DatabaseConnectionService;
-import com.litiron.code.lineage.sql.utils.Md5Util;
 import com.litiron.code.lineage.sql.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -62,7 +61,7 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
     public void addDatabaseConnection(DatabaseConnectionEntity databaseConnectionEntity) {
         String uid = ThreadLocalUtil.getUser();
         databaseConnectionEntity.setUId(uid);
-        databaseConnectionEntity.setPassword(Md5Util.getMD5String(databaseConnectionEntity.getPassword()));
+        databaseConnectionEntity.setPassword(databaseConnectionEntity.getPassword());
         databaseConnectionRepository.insert(databaseConnectionEntity);
     }
 
@@ -81,7 +80,7 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
         if (ObjectUtil.isEmpty(databaseConnection)) {
             throw new BusinessException("该数据库连接信息id不存在");
         }
-        databaseConnectionEntity.setPassword(Md5Util.getMD5String(databaseConnectionEntity.getPassword()));
+        databaseConnectionEntity.setPassword(databaseConnectionEntity.getPassword());
         databaseConnectionRepository.updateById(databaseConnectionEntity);
     }
 

@@ -19,7 +19,8 @@ public class SqlLineageTableBaseDto {
 
     private String connectionIp = TableConstants.DEFAULT_CONNECTION_IP;
 
-    private String schemaName = TableConstants.DEFAULT_SCHEMA_NAME;
+    private String schemaName;
+//    private String schemaName = TableConstants.DEFAULT_SCHEMA_NAME;
 
     private Integer connectionPort = TableConstants.DEFAULT_CONNECTION_PORT;
 

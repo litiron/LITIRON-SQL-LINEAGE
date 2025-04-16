@@ -37,7 +37,7 @@ public interface DatabaseComplexService {
      * @author: 李日红
      * @create: 2024/12/7 13:35
      */
-    IPage<Map<String, Object>> retrieveTableDetails(TableDetailsParamsDto tableDetailsParamsDto);
+    IPage<Map<String, Object>> retrieveTableDetailsByPage(TableDetailsParamsDto tableDetailsParamsDto);
 
     /**
      * @description: 根据连接信息获取pg的所有数据库信息

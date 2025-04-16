@@ -3,6 +3,9 @@ server:
   servlet:
     context-path: /litiron
 spring:
+  mvc:
+    async:
+      request-timeout: 600000
   aop:
     proxy-target-class: true
   application:
@@ -77,6 +80,6 @@ langchain4j:
       api-key: "sk-dec9f63bdacf455999064dd1b87dd256"
       log-requests: true
       log-responses: true
-      model-name: "deepseek-reasoner"
-      base-url: "https://api.deepseek.com/v1/chat/completions"
+      model-name: "deepseek-chat"
+      base-url: "https://api.deepseek.com/v1"
 

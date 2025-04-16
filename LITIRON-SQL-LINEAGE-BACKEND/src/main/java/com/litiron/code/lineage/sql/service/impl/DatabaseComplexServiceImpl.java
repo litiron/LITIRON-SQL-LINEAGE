@@ -51,10 +51,10 @@ public class DatabaseComplexServiceImpl implements DatabaseComplexService {
     }
 
     @Override
-    public IPage<Map<String, Object>> retrieveTableDetails(TableDetailsParamsDto tableDetailsParamsDto) {
+    public IPage<Map<String, Object>> retrieveTableDetailsByPage(TableDetailsParamsDto tableDetailsParamsDto) {
         DBContextHolder.setDataSource(tableDetailsParamsDto.getConnectionId());
         IPage<Map<String, Object>> page = new Page<>(tableDetailsParamsDto.getPageNumber(), tableDetailsParamsDto.getPageSize());
-        IPage<Map<String, Object>> tableDetails = databaseDynamicService.retrieveTableDetails(page, tableDetailsParamsDto.getTableName());
+        IPage<Map<String, Object>> tableDetails = databaseDynamicService.retrieveTableDetailsByPage(page, tableDetailsParamsDto.getTableName());
         DBContextHolder.clearDataSource();
         return tableDetails;
     }

@@ -24,7 +24,11 @@
         <log4j.version>1.2.17</log4j.version>
         <druid.version>1.1.23</druid.version>
         <postgresql.version>42.6.2</postgresql.version>
+        <langchain4jOpenAi.version>1.0.0-beta2</langchain4jOpenAi.version>
         <langchain4j.version>1.0.0-beta2</langchain4j.version>
+        <rag.version>1.0.0-beta2</rag.version>
+        <pgVector.version>1.0.0-beta2</pgVector.version>
+
     </properties>
 
     <dependencyManagement>
@@ -84,7 +88,17 @@
             <dependency>
                 <groupId>dev.langchain4j</groupId>
                 <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
+                <version>${langchain4jOpenAi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-spring-boot-starter</artifactId>
                 <version>${langchain4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-pgvector</artifactId>
+                <version>${pgVector.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -28,7 +28,7 @@ public class DeepseekRequestDto {
         return deepseekRequestDto;
     }
 
-    static class Message {
+    public static class Message {
         private String content;
         private String role;
 

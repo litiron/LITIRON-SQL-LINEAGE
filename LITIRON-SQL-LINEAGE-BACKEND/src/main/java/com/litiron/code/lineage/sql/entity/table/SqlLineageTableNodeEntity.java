@@ -39,6 +39,10 @@ public class SqlLineageTableNodeEntity {
 
     private String tableComment;
 
+    // 入边（上游关系）
+    @Relationship(type = "SqlLineageTableEdgeEntity", direction = Relationship.Direction.INCOMING)
+    private List<SqlLineageTableEdgeEntity> inRelationship;
+
     @Relationship(type = "SqlLineageTableEdgeEntity", direction = Relationship.Direction.OUTGOING)
     private List<SqlLineageTableEdgeEntity> outRelationShip;
 }

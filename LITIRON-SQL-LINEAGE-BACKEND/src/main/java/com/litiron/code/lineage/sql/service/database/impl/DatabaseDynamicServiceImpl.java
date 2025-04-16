@@ -18,8 +18,13 @@ public class DatabaseDynamicServiceImpl implements DatabaseDynamicService {
     private DatabaseDynamicRepository databaseDynamicRepository;
 
     @Override
-    public IPage<Map<String, Object>> retrieveTableDetails(IPage<Map<String, Object>> page, String tableName) {
-        return databaseDynamicRepository.retrieveTableDetails(page, tableName);
+    public IPage<Map<String, Object>> retrieveTableDetailsByPage(IPage<Map<String, Object>> page, String tableName) {
+        return databaseDynamicRepository.retrieveTableDetailsByPage(page, tableName);
+    }
+
+    @Override
+    public Map<String, Object> retrieveTableDetails(String tableName) {
+        return databaseDynamicRepository.retrieveTableDetails(tableName);
     }
 
     @Autowired
