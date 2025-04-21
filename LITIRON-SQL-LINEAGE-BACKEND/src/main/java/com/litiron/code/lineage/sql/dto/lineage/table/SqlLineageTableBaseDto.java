@@ -15,14 +15,13 @@ public class SqlLineageTableBaseDto {
 
     private String tableName;
 
-    private String databaseName = TableConstants.DEFAULT_DATABASE_NAME;
+    private String databaseName ;
 
-    private String connectionIp = TableConstants.DEFAULT_CONNECTION_IP;
+    private String connectionIp ;
 
     private String schemaName;
-//    private String schemaName = TableConstants.DEFAULT_SCHEMA_NAME;
 
-    private Integer connectionPort = TableConstants.DEFAULT_CONNECTION_PORT;
+    private Integer connectionPort ;
 
     private String tableComment;
 }

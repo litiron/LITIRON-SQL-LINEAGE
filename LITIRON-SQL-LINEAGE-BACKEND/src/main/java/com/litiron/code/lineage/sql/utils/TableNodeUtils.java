@@ -7,7 +7,8 @@ package com.litiron.code.lineage.sql.utils;
  **/
 public class TableNodeUtils {
     private static final String TABLE_KEY_PATTERN = "%s:%s";
-    private static final String TABLE_COLUMN_KEY_PATTERN = "%s:%s:%s:%s";
+    private static final String COLUMN_NODE_KEY_PATTERN = "%s:%s:%s:%s:%s";
+    private static final String TABLE_NODE_KEY_PATTERN = "%s:%s:%s:%s";
 
     /**
      * 用于node连接过程中的key判断，保证两个node不会重复添加relationShip
@@ -20,7 +21,11 @@ public class TableNodeUtils {
         return t1.compareTo(t2) >= 0 ? String.format(TABLE_KEY_PATTERN, t1, t2) : String.format(TABLE_KEY_PATTERN, t2, t1);
     }
 
+    public static String generateKey(String ip, String t1, String t2, String c1, String c2) {
+        return String.format(COLUMN_NODE_KEY_PATTERN, ip, t1, t2, c1, c2);
+    }
+
     public static String generateKey(String t1, String t2, String c1, String c2) {
-        return String.format(TABLE_COLUMN_KEY_PATTERN, t1, t2, c1, c2);
+        return String.format(TABLE_NODE_KEY_PATTERN, t1, t2, c1, c2);
     }
 }

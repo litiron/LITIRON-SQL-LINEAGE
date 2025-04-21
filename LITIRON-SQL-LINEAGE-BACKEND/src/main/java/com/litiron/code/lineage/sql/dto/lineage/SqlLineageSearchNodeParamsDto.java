@@ -5,12 +5,12 @@ import lombok.Setter;
 
 /**
  * @author 李日红
- * @description: 表维度的图数据库关系查询参数dto
+ * @description: 图数据库关系查询参数dto
  * @create 2025/2/22 16:48
  */
 @Setter
 @Getter
-public class SqlLineageTableNodeParamsDto {
+public class SqlLineageSearchNodeParamsDto {
     /*
      * 连接信息的id，根据此id获取IP和端口号
      */
@@ -21,4 +21,5 @@ public class SqlLineageTableNodeParamsDto {
      */
     private String schemaName;
     private String tableName;
+    private String columnName;
 }

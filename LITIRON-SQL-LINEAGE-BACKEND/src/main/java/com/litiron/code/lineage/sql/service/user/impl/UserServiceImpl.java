@@ -1,9 +1,12 @@
 package com.litiron.code.lineage.sql.service.user.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.litiron.code.lineage.sql.common.BusinessException;
 import com.litiron.code.lineage.sql.dao.UserRepository;
+import com.litiron.code.lineage.sql.dto.user.UserDto;
+import com.litiron.code.lineage.sql.dto.user.UserInfoUpdateParamsDto;
 import com.litiron.code.lineage.sql.dto.user.UserParamsDto;
 import com.litiron.code.lineage.sql.entity.user.UserEntity;
 import com.litiron.code.lineage.sql.service.user.UserService;
@@ -31,9 +34,10 @@ import static com.litiron.code.lineage.sql.constants.RedisConstant.LOGIN_USER_TT
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final StringRedisTemplate stringRedisTemplate;
+
     @Override
     public void register(UserParamsDto userParamsDto) {
-        UserEntity user = getUser(userParamsDto.getUserName());
+        UserEntity user = getUser(userParamsDto.getUsername());
         if (ObjectUtil.isNotEmpty(user)) {
             throw new BusinessException("该用户名已存在");
         }
@@ -43,7 +47,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String login(UserParamsDto userParamsDto) {
-        UserEntity user = getUser(userParamsDto.getUserName());
+        UserEntity user = getUser(userParamsDto.getUsername());
         if (ObjectUtil.isEmpty(user)) {
             throw new BusinessException("该用户名不存在");
         }
@@ -56,11 +60,42 @@ public class UserServiceImpl implements UserService {
         return token;
     }
 
+    @Override
+    public UserDto getUserInfo() {
+        String userId = ThreadLocalUtil.getUser();
+        UserEntity user = userRepository.selectById(userId);
+        if (ObjectUtil.isEmpty(user)) {
+            throw new BusinessException("用户信息为空");
+        }
+        return BeanUtil.copyProperties(user, UserDto.class);
+    }
+
+    @Override
+    public void updateInfo(UserInfoUpdateParamsDto infoUpdateParamsDto) {
+        String userId = ThreadLocalUtil.getUser();
+        UserEntity user = BeanUtil.copyProperties(infoUpdateParamsDto, UserEntity.class);
+        user.setId(userId);
+        userRepository.updateById(user);
+    }
+
+    @Override
+    public void updatePassword(UserInfoUpdateParamsDto infoUpdateParamsDto) {
+        String userId = ThreadLocalUtil.getUser();
+        UserEntity user = userRepository.selectById(userId);
+        if (Md5Util.getMD5String(infoUpdateParamsDto.getOldPassword()).equals(user.getPassword())) {
+            //密码准确
+            user.setPassword(Md5Util.getMD5String(infoUpdateParamsDto.getNewPassword()));
+            userRepository.updateById(user);
+        } else {
+            throw new BusinessException("旧密码错误，请重试");
+        }
+    }
+
     private UserEntity buildUserInfo(UserParamsDto userParamsDto) {
         UserEntity newUser = new UserEntity();
         String safe_pwd = Md5Util.getMD5String(userParamsDto.getPassword());
-        newUser.setUserName(userParamsDto.getUserName());
-        newUser.setNickName(userParamsDto.getUserName());
+        newUser.setUserName(userParamsDto.getUsername());
+        newUser.setNickName(userParamsDto.getUsername());
         newUser.setPassword(safe_pwd);
         return newUser;
     }

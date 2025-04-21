@@ -1,5 +1,6 @@
 package com.litiron.code.lineage.sql.service.column;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.SQLUtils;
@@ -9,14 +10,21 @@ import com.alibaba.druid.sql.ast.expr.*;
 import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGInsertStatement;
 import com.alibaba.druid.sql.visitor.SQLASTVisitorAdapter;
-import com.litiron.code.lineage.sql.common.constants.TableConstants;
+import com.litiron.code.lineage.sql.common.BusinessException;
+import com.litiron.code.lineage.sql.constants.DatabaseConnectionConstant;
 import com.litiron.code.lineage.sql.dao.column.SqlLineageColumnRepository;
+import com.litiron.code.lineage.sql.dto.database.ColumnStructureInfoDto;
+import com.litiron.code.lineage.sql.dto.database.DatabaseStructInfoDto;
+import com.litiron.code.lineage.sql.dto.database.TableStructureInfoDto;
 import com.litiron.code.lineage.sql.dto.lineage.ParseRelationParamsDto;
 import com.litiron.code.lineage.sql.dto.lineage.column.ParsedColumnMetaDto;
 import com.litiron.code.lineage.sql.dto.lineage.column.SqlLineageColumnDependencyDto;
 import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableColDepDto;
 import com.litiron.code.lineage.sql.entity.column.SqlLineageColumnEdgeEntity;
 import com.litiron.code.lineage.sql.entity.column.SqlLineageColumnNodeEntity;
+import com.litiron.code.lineage.sql.entity.database.DatabaseConnectionEntity;
+import com.litiron.code.lineage.sql.service.database.DatabaseConnectionService;
+import com.litiron.code.lineage.sql.service.impl.DatabaseComplexServiceImpl;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,24 +46,30 @@ public class SqlLineageColumnServiceImpl implements SqlLineageColumnService {
 
 
     private final SqlLineageColumnRepository sqlLineageColumnRepository;
-
+    private final DatabaseComplexServiceImpl databaseComplexService;
+    private final DatabaseConnectionService databaseConnectionService;
 
     @Autowired
-    public SqlLineageColumnServiceImpl(SqlLineageColumnRepository sqlLineageColumnRepository) {
+    public SqlLineageColumnServiceImpl(SqlLineageColumnRepository sqlLineageColumnRepository, DatabaseComplexServiceImpl databaseComplexService,
+                                       DatabaseConnectionService databaseConnectionService) {
         this.sqlLineageColumnRepository = sqlLineageColumnRepository;
+        this.databaseComplexService = databaseComplexService;
+        this.databaseConnectionService = databaseConnectionService;
     }
 
 
     @Override
     public void parseColumnDependency(ParseRelationParamsDto parseRelationParamsDto) {
-        new ColumnInnerParser(parseRelationParamsDto.getConnectionIp(), parseRelationParamsDto.getPort(), parseRelationParamsDto.getDatabaseType())
-                .parseColumnDependency(parseRelationParamsDto.getSql());
+        DatabaseConnectionEntity entity = databaseConnectionService.getDatabaseConnectionInfoById(parseRelationParamsDto.getConnectionId());
+        new ColumnInnerParser(parseRelationParamsDto.getConnectionId(), entity.getIp(), entity.getPort(), entity.getType(), parseRelationParamsDto.getPgDbName())
+                .parseColumnDependency(parseRelationParamsDto);
     }
 
     @Override
     public List<ParsedColumnMetaDto> parseColumnRelation(ParseRelationParamsDto parseRelationParamsDto) {
-        return new ColumnInnerParser(parseRelationParamsDto.getConnectionIp(), parseRelationParamsDto.getPort(), parseRelationParamsDto.getDatabaseType())
-                .parseColumnMeta(parseRelationParamsDto.getSql());
+        DatabaseConnectionEntity entity = databaseConnectionService.getDatabaseConnectionInfoById(parseRelationParamsDto.getConnectionId());
+        return new ColumnInnerParser(parseRelationParamsDto.getConnectionId(), entity.getIp(), entity.getPort(), entity.getType(), parseRelationParamsDto.getPgDbName())
+                .parseColumnMeta(parseRelationParamsDto);
     }
 
     @Getter
@@ -63,6 +77,8 @@ public class SqlLineageColumnServiceImpl implements SqlLineageColumnService {
     class ColumnInnerParser {
         // 别名管理待优化 todo 嵌套子查询导致别名覆盖
         private Map<String, SqlLineageTableColDepDto> aliasTableMap = new HashMap<>(16);
+
+        private String connectionId;
 
         private String connectionIp;
 
@@ -72,16 +88,20 @@ public class SqlLineageColumnServiceImpl implements SqlLineageColumnService {
 
         private String databaseType;
 
-        public ColumnInnerParser(String connectionIp, Integer port, String databaseType) {
+        private String pgDbName;
+
+        public ColumnInnerParser(String connectionId, String connectionIp, Integer port, String databaseType, String pgDbName) {
+            this.connectionId = connectionId;
             this.connectionIp = connectionIp;
             this.port = port;
             this.databaseType = databaseType;
+            this.pgDbName = pgDbName;
         }
 
-        public List<ParsedColumnMetaDto> parseColumnMeta(String sql) {
+        public List<ParsedColumnMetaDto> parseColumnMeta(ParseRelationParamsDto parseRelationParamsDto) {
             List<ParsedColumnMetaDto> columns = new ArrayList<>();
             // 解析SQL语句
-            List<SQLStatement> sqlStatements = parsePgStatements(sql);
+            List<SQLStatement> sqlStatements = parsePgStatements(parseRelationParamsDto.getSql());
             // 解析SQL语句
             for (SQLStatement stmt : sqlStatements) {
                 if (stmt instanceof SQLSelectStatement select) {
@@ -95,12 +115,38 @@ public class SqlLineageColumnServiceImpl implements SqlLineageColumnService {
                 }
             }
             // 去除一些重复信息，有些可能因为解析顺序没有拿到alias对应的表信息，如果要完善应当还需要再增一个当前处理不到的集合，在这个地方进行最后的处理
-            columns = columns.stream().filter(col -> StrUtil.isNotBlank(col.getTableName())).collect(Collectors.toList());
+            columns = columns.stream().filter(col -> StrUtil.isNotBlank(col.getTableName()) && StrUtil.isNotBlank(col.getDatabaseName())).collect(Collectors.toList());
             // 还需要进行去重，根据数据库+表+字段名（简单一点这里先不做处理）
-            // todo 通过当前类的connectionIp和port去查看数据库 填充数据库字段表名批注信息
+
+            populateColumnsDto(columns, parseRelationParamsDto.getConnectionId(), parseRelationParamsDto.getPgDbName());
             return columns;
         }
 
+        private void populateColumnsDto(List<ParsedColumnMetaDto> columns, String connectionId, String pgDbName) {
+            List<DatabaseStructInfoDto> databaseStructInfoDtoList = databaseComplexService.updateDatabaseConnection(connectionId, pgDbName);
+            for (ParsedColumnMetaDto column : columns) {
+                if (StrUtil.isEmpty(column.getColumnName())) {
+                    //此处是因为插入表的字段被当成了表名
+                    continue;
+                }
+                List<DatabaseStructInfoDto> DbList = databaseStructInfoDtoList.stream().filter(db -> db.getDatabaseName().equals(column.getDatabaseName())).findAny().stream().toList();
+                if (CollectionUtil.isEmpty(DbList)) {
+                    throw new BusinessException("该数据库不存在");
+                }
+                List<TableStructureInfoDto> tableList = DbList.get(0).getTableStructureInfoDtoList().stream().filter(table -> table.getTableName().equals(column.getTableName())).findAny().stream().toList();
+                if (CollectionUtil.isEmpty(tableList)) {
+                    throw new BusinessException("该表名不存在");
+                }
+                column.setTableComment(tableList.get(0).getTableComment());
+                if (StrUtil.isNotEmpty(pgDbName)) {
+                    column.setSchemaName(column.getDatabaseName());
+                    column.setDatabaseName(pgDbName);
+                }
+                List<ColumnStructureInfoDto> columnList = tableList.get(0).getColumnStructureInfoDtoList().stream().filter(thisColumn -> thisColumn.getColumnName().equals(column.getColumnName())).findAny().stream().toList();
+                column.setColumnComment(columnList.get(0).getColumnComment());
+            }
+
+        }
 
         private void handleSelectStatement(SQLSelectQuery query, List<ParsedColumnMetaDto> columns) {
             if (query instanceof SQLSelectQueryBlock queryBlock) {
@@ -218,9 +264,9 @@ public class SqlLineageColumnServiceImpl implements SqlLineageColumnService {
         }
 
         // 解析SQL语句中的字段依赖关系
-        public void parseColumnDependency(String sql) {
+        public void parseColumnDependency(ParseRelationParamsDto parseRelationParamsDto) {
             // 解析SQL语句
-            List<SQLStatement> sqlStatements = parsePgStatements(sql);
+            List<SQLStatement> sqlStatements = parsePgStatements(parseRelationParamsDto.getSql());
             // 遍历解析后的SQL语句
             for (SQLStatement sqlStatement : sqlStatements) {
                 // 如果是INSERT语句
@@ -249,14 +295,20 @@ public class SqlLineageColumnServiceImpl implements SqlLineageColumnService {
 
                         // 创建目标字段节点
                         SqlLineageColumnNodeEntity root = new SqlLineageColumnNodeEntity();
-                        root.setSchemaName(targetSchema);
                         root.setTableName(targetTable);
                         root.setConnectionIp(this.getConnectionIp());
                         root.setPort(this.getPort());
-                        root.setDatabaseName(StrUtil.isBlank(catalog) ? TableConstants.DEFAULT_DATABASE_NAME : catalog);
-                        root.setDatabaseType(DbType.postgresql.toString());
+                        if (DatabaseConnectionConstant.CONNECTION_TYPE_PGSQL.equals(this.getDatabaseType())) {
+                            // pg
+                            root.setDatabaseName(catalog);
+                            root.setSchemaName(targetSchema);
+                        } else {
+                            // mysql
+                            root.setDatabaseName(targetSchema);
+                        }
+                        root.setDatabaseType(this.getDatabaseType());
                         root.setColumnName(column.toString().replaceAll("`", ""));
-
+                        populateColumnComment(root, parseRelationParamsDto.getConnectionId(), parseRelationParamsDto.getPgDbName());
                         // 分析来源字段,构建字段依赖关系
                         List<SqlLineageColumnNodeEntity> sourceColumns = extractSourceColumns(selectItem);
                         root.convertEdge(sourceColumns);
@@ -267,13 +319,27 @@ public class SqlLineageColumnServiceImpl implements SqlLineageColumnService {
             }
         }
 
+        private void populateColumnComment(SqlLineageColumnNodeEntity root, String connectionId, String pgDbName) {
+            List<DatabaseStructInfoDto> databaseStructInfoDtoList = databaseComplexService.updateDatabaseConnection(connectionId, pgDbName);
+            List<DatabaseStructInfoDto> DbList = databaseStructInfoDtoList.stream().filter(db -> db.getDatabaseName().equals(root.getDatabaseName())).findAny().stream().toList();
+            if (CollectionUtil.isEmpty(DbList)) {
+                throw new BusinessException("该数据库不存在");
+            }
+            List<TableStructureInfoDto> tableList = DbList.get(0).getTableStructureInfoDtoList().stream().filter(table -> table.getTableName().equals(root.getTableName())).findAny().stream().toList();
+            if (CollectionUtil.isEmpty(tableList)) {
+                throw new BusinessException("该表名不存在");
+            }
+            root.setTableComment(tableList.get(0).getTableComment());
+            List<ColumnStructureInfoDto> columnList = tableList.get(0).getColumnStructureInfoDtoList().stream().filter(thisColumn -> thisColumn.getColumnName().equals(root.getColumnName())).findAny().stream().toList();
+            root.setColumnComment(columnList.get(0).getColumnComment());
+        }
 
         private List<SQLStatement> parsePgStatements(String sql) {
             return SQLUtils.parseStatements(sql, DbType.postgresql);
         }
 
         private void createColumnLineage(SqlLineageColumnNodeEntity targetColumn) {
-            SqlLineageColumnNodeEntity sqlLineageColumnNodeEntity = retrieveColumnNode(targetColumn.getDatabaseName(), targetColumn.getSchemaName(), targetColumn.getTableName(), targetColumn.getColumnName());
+            SqlLineageColumnNodeEntity sqlLineageColumnNodeEntity = retrieveColumnNode(targetColumn.getConnectionIp(), targetColumn.getPort(), targetColumn.getDatabaseName(), targetColumn.getSchemaName(), targetColumn.getTableName(), targetColumn.getColumnName());
             if (Objects.isNull(sqlLineageColumnNodeEntity)) {
                 // 走新增
                 sqlLineageColumnRepository.save(targetColumn);
@@ -361,12 +427,19 @@ public class SqlLineageColumnServiceImpl implements SqlLineageColumnService {
 
             if (!tableInfo.isSubQuery() || Objects.isNull(tableInfo.getColumnMap())) {
                 SqlLineageColumnNodeEntity column = new SqlLineageColumnNodeEntity();
-                column.setSchemaName(tableInfo.getSchemaName());
-                column.setDatabaseName(tableInfo.getDatabaseName());
+                if (DatabaseConnectionConstant.CONNECTION_TYPE_MYSQL.equals(this.getDatabaseType())) {
+                    //mysql
+                    column.setDatabaseName(tableInfo.getSchemaName());
+                } else {
+                    column.setSchemaName(tableInfo.getSchemaName());
+                    column.setDatabaseName(tableInfo.getDatabaseName());
+                }
                 column.setTableName(tableInfo.getTableName());
+                column.setConnectionIp(this.getConnectionIp());
+                column.setPort(this.getPort());
                 column.setColumnName(expr.getName().replaceAll("`", ""));
-                // todo 临时写死PG
-                column.setDatabaseType(DbType.postgresql.toString());
+                column.setDatabaseType(this.getDatabaseType());
+                populateColumnComment(column, this.getConnectionId(), this.getPgDbName());
                 sourceColumns.add(column);
                 return;
             }
@@ -492,8 +565,9 @@ public class SqlLineageColumnServiceImpl implements SqlLineageColumnService {
         }
 
 
-        public SqlLineageColumnNodeEntity retrieveColumnNode(String database, String schema, String table, String column) {
-            String id = database + ":" + schema + ":" + table + ":" + column;
+        public SqlLineageColumnNodeEntity retrieveColumnNode(String connectionIp, Integer port
+                , String database, String schema, String table, String column) {
+            String id = connectionIp + ":" + port + ":" + database + ":" + schema + ":" + table + ":" + column;
             return sqlLineageColumnRepository.retrieveColumnNodeById(id);
         }
 

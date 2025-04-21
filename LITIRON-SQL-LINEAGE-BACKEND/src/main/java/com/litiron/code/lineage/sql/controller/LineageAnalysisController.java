@@ -8,12 +8,14 @@ import com.litiron.code.lineage.sql.common.Rest;
 import com.litiron.code.lineage.sql.dao.table.SqlLineageTableEdgeRepository;
 import com.litiron.code.lineage.sql.dto.database.DatabaseConnectionDto;
 import com.litiron.code.lineage.sql.dto.database.DatabaseStructInfoDto;
-import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableNodeParamsDto;
+import com.litiron.code.lineage.sql.dto.lineage.SqlLineageSearchNodeParamsDto;
+import com.litiron.code.lineage.sql.dto.lineage.column.SqlLineageColumnNodeDto;
 import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableNodeDto;
 import com.litiron.code.lineage.sql.entity.table.SqlLineageTableEdgeEntity;
 import com.litiron.code.lineage.sql.service.LineageAnalysisService;
 import com.litiron.code.lineage.sql.vo.database.DatabaseConnectionVo;
 import com.litiron.code.lineage.sql.vo.database.DatabaseStructInfoVo;
+import com.litiron.code.lineage.sql.vo.lineage.SqlLineageColumnNodeVo;
 import com.litiron.code.lineage.sql.vo.lineage.SqlLineageTableNodeVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,27 +69,46 @@ public class LineageAnalysisController {
     }
 
     @PostMapping("/neo4j/retrieve/table")
-    public Rest<?> retrieveNeo4jTable(@RequestBody SqlLineageTableNodeParamsDto sqlLineageTableNodeParamsDto) {
+    public Rest<?> retrieveNeo4jTable(@RequestBody SqlLineageSearchNodeParamsDto sqlLineageSearchNodeParamsDto) {
         try {
-            validateNeo4jTableParams(sqlLineageTableNodeParamsDto);
-            List<SqlLineageTableNodeDto> sqlLineageTableNodeDto = lineageAnalysisService.retrieveNeo4jTableInfo(sqlLineageTableNodeParamsDto);
+            validateNeo4jTableParams(sqlLineageSearchNodeParamsDto);
+            List<SqlLineageTableNodeDto> sqlLineageTableNodeDto = lineageAnalysisService.retrieveNeo4jTableInfo(sqlLineageSearchNodeParamsDto);
             List<SqlLineageTableNodeVo> sqlLineageTableNodeVos = BeanUtil.copyToList(sqlLineageTableNodeDto, SqlLineageTableNodeVo.class);
             return Rest.success(sqlLineageTableNodeVos);
         } catch (BusinessException be) {
-            log.error("RetrieveNeo4jTable and validateNeo4jTableParams error, params are {}", JSONUtil.toJsonStr(sqlLineageTableNodeParamsDto), be);
+            log.error("RetrieveNeo4jTable and validateNeo4jTableParams error, params are {}", JSONUtil.toJsonStr(sqlLineageSearchNodeParamsDto), be);
             return Rest.error(be.getMessage());
         } catch (Exception e) {
-            log.error("RetrieveNeo4jTable  error, params are {}", JSONUtil.toJsonStr(sqlLineageTableNodeParamsDto), e);
+            log.error("RetrieveNeo4jTable  error, params are {}", JSONUtil.toJsonStr(sqlLineageSearchNodeParamsDto), e);
             return Rest.error("未知异常");
         }
     }
 
-    private void validateNeo4jTableParams(SqlLineageTableNodeParamsDto sqlLineageTableNodeParamsDto) {
-        if (StrUtil.isEmpty(sqlLineageTableNodeParamsDto.getId())) {
+    @PostMapping("/neo4j/retrieve/column")
+    public Rest<?> retrieveNeo4jColumn(@RequestBody SqlLineageSearchNodeParamsDto sqlLineageSearchNodeParamsDto) {
+        try {
+            validateNeo4jTableParams(sqlLineageSearchNodeParamsDto);
+            List<SqlLineageColumnNodeDto> sqlLineageColumnNodeDtos = lineageAnalysisService.retrieveNeo4jColumnInfo(sqlLineageSearchNodeParamsDto);
+            List<SqlLineageColumnNodeVo> sqlLineageColumnNodeVos = BeanUtil.copyToList(sqlLineageColumnNodeDtos, SqlLineageColumnNodeVo.class);
+            return Rest.success(sqlLineageColumnNodeVos);
+        } catch (BusinessException be) {
+            log.error("RetrieveNeo4jColumn and validateNeo4jTableParams error, params are {}", JSONUtil.toJsonStr(sqlLineageSearchNodeParamsDto), be);
+            return Rest.error(be.getMessage());
+        } catch (Exception e) {
+            log.error("RetrieveNeo4jColumn  error, params are {}", JSONUtil.toJsonStr(sqlLineageSearchNodeParamsDto), e);
+            return Rest.error("未知异常");
+        }
+    }
+
+    private void validateNeo4jTableParams(SqlLineageSearchNodeParamsDto sqlLineageSearchNodeParamsDto) {
+        if (StrUtil.isEmpty(sqlLineageSearchNodeParamsDto.getId())) {
             throw new BusinessException("连接信息ID不能为空！");
         }
-        if (StrUtil.isEmpty(sqlLineageTableNodeParamsDto.getDatabaseName())) {
+        if (StrUtil.isEmpty(sqlLineageSearchNodeParamsDto.getDatabaseName())) {
             throw new BusinessException("数据库不能为空！");
+        }
+        if (StrUtil.isEmpty(sqlLineageSearchNodeParamsDto.getTableName())) {
+            throw new BusinessException("表名不能为空！");
         }
     }
 

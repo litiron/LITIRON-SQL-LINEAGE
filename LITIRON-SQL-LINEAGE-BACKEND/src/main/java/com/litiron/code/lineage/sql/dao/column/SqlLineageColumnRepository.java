@@ -13,4 +13,14 @@ public interface SqlLineageColumnRepository extends Neo4jRepository<SqlLineageCo
 
     @Query("MATCH (c:SqlLineageColumnNodeEntity) WHERE c.id = $id RETURN c")
     SqlLineageColumnNodeEntity retrieveColumnNodeById(String id);
+
+    @Query("MATCH (n:SqlLineageColumnNodeEntity) WHERE n.id = $id " +
+            "OPTIONAL MATCH (n)-[outRel:SqlLineageColumnEdgeEntity]->(outNode) " +      // 出边（下游）
+            "OPTIONAL MATCH (inNode)-[inRel:SqlLineageColumnEdgeEntity]->(n) " +        // 入边（上游）
+            "RETURN n, " +
+            "COLLECT(outRel) AS outgoingRelationships, " +
+            "COLLECT(outNode) AS downstreamNodes, " +
+            "COLLECT(inRel) AS incomingRelationships, " +
+            "COLLECT(inNode) AS upstreamNodes")
+    SqlLineageColumnNodeEntity findNodeWithAllRelationships(String id);
 }

@@ -42,11 +42,13 @@ public class SqlParserController {
 
     @PostMapping("/parse/relation/column")
     public Rest<List<ParsedColumnMetaDto>> parseRelationColumn(@RequestBody ParseRelationParamsDto parseRelationParamsDto) {
+        validateParseParams(parseRelationParamsDto);
         return Rest.success(sqlLineageParseService.parseColumnRelation(parseRelationParamsDto));
     }
 
     @PostMapping("/parse/column/dependency")
     public Rest<?> parseColumnDependency(@RequestBody ParseRelationParamsDto parseRelationParamsDto) {
+        validateParseParams(parseRelationParamsDto);
         sqlLineageParseService.parseColumnDependency(parseRelationParamsDto);
         return Rest.success();
     }

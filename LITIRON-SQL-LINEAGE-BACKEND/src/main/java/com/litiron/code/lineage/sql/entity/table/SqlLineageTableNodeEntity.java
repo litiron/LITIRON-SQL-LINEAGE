@@ -1,6 +1,5 @@
 package com.litiron.code.lineage.sql.entity.table;
 
-import com.litiron.code.lineage.sql.common.constants.TableConstants;
 import com.litiron.code.lineage.sql.config.generator.Neo4jTableNodeGenerator;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,11 +28,11 @@ public class SqlLineageTableNodeEntity {
 
     private String tableName;
 
-    private String databaseName = TableConstants.DEFAULT_DATABASE_NAME;
+    private String databaseName;
 
-    private String connectionIp = TableConstants.DEFAULT_CONNECTION_IP;
+    private String connectionIp;
 
-    private Integer connectionPort = TableConstants.DEFAULT_CONNECTION_PORT;
+    private Integer connectionPort;
 
     private String schemaName;
 

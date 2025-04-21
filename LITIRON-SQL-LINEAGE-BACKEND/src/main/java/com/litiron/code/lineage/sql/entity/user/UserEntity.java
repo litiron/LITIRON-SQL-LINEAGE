@@ -22,13 +22,10 @@ public class UserEntity {
 
     private String nickName;
 
-    private String avatar;
-
     private String email;
 
     private String address;
 
-    private Integer phone;
+    private String phone;
 
-    private String host;
 }

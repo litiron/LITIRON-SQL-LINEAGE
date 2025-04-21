@@ -26,23 +26,22 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-//        String token = request.getHeader("Authorization");
-        String token = "1a1d38da89004dc4a369050d2c447e9b";
+        String token = request.getHeader("Token");
 
-//        if (StrUtil.isBlank(token)) {
-//            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-//            return false;
-//        }
-//
-//        String tokenKey = LOGIN_USER_KEY + token;
-//        String uid = stringRedisTemplate.opsForValue().get(tokenKey);
-//        if (StrUtil.isEmpty(uid)) {
-//            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-//            return false;
-//        }
-//
-//        ThreadLocalUtil.setUser(uid);
-//        stringRedisTemplate.expire(tokenKey, LOGIN_USER_TTL, TimeUnit.MINUTES);
+        if (StrUtil.isBlank(token)) {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            return false;
+        }
+
+        String tokenKey = LOGIN_USER_KEY + token;
+        String uid = stringRedisTemplate.opsForValue().get(tokenKey);
+        if (StrUtil.isEmpty(uid)) {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            return false;
+        }
+
+        ThreadLocalUtil.setUser(uid);
+        stringRedisTemplate.expire(tokenKey, LOGIN_USER_TTL, TimeUnit.MINUTES);
         return true;
     }
 

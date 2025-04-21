@@ -3,6 +3,7 @@ package com.litiron.code.lineage.sql.entity.column;
 import com.alibaba.druid.DbType;
 import com.litiron.code.lineage.sql.config.generator.Neo4jColumnNodeGenerator;
 import com.litiron.code.lineage.sql.dto.lineage.column.SqlLineageColumnDependencyDto;
+import com.litiron.code.lineage.sql.entity.table.SqlLineageTableEdgeEntity;
 import com.litiron.code.lineage.sql.utils.TableNodeUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,15 +39,23 @@ public class SqlLineageColumnNodeEntity {
 
     private String tableName;
 
+    private String tableComment;
+
     private String databaseType;
 
     private String columnName;
 
+    private String columnComment;
+
+    // 入边（上游关系）
+    @Relationship(type = "SqlLineageColumnEdgeEntity", direction = Relationship.Direction.INCOMING)
+    private List<SqlLineageColumnEdgeEntity> inRelationship;
+
     @Relationship(type = "SqlLineageColumnEdgeEntity", direction = Relationship.Direction.OUTGOING)
-    private List<SqlLineageColumnEdgeEntity> outRelationShip = new ArrayList<>();
+    private List<SqlLineageColumnEdgeEntity> outRelationShip=new ArrayList<>();
 
     public String getId() {
-        return TableNodeUtils.generateKey(databaseName, schemaName, tableName, columnName);
+        return TableNodeUtils.generateKey(connectionIp, databaseName, schemaName, tableName, columnName);
     }
 
     public static SqlLineageColumnNodeEntity convert(SqlLineageColumnDependencyDto columnDependencyDto) {
@@ -62,7 +71,7 @@ public class SqlLineageColumnNodeEntity {
     public void convertEdge(List<SqlLineageColumnNodeEntity> outgoingNodeList) {
         for (SqlLineageColumnNodeEntity nodeEntity : outgoingNodeList) {
             SqlLineageColumnEdgeEntity edge = new SqlLineageColumnEdgeEntity();
-            edge.setSqlLineageColumnNodeEntity(nodeEntity);
+            edge.setSqlLineageColumnNode(nodeEntity);
             edge.setBusinessId(TableNodeUtils.generateKey(nodeEntity.getId(), this.getId()));
             this.getOutRelationShip().add(edge);
         }

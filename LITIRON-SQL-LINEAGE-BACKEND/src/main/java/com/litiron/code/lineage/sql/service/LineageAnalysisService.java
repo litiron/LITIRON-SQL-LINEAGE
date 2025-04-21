@@ -2,8 +2,9 @@ package com.litiron.code.lineage.sql.service;
 
 import com.litiron.code.lineage.sql.dto.database.DatabaseConnectionDto;
 import com.litiron.code.lineage.sql.dto.database.DatabaseStructInfoDto;
+import com.litiron.code.lineage.sql.dto.lineage.SqlLineageSearchNodeParamsDto;
+import com.litiron.code.lineage.sql.dto.lineage.column.SqlLineageColumnNodeDto;
 import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableNodeDto;
-import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableNodeParamsDto;
 
 import java.util.List;
 
@@ -46,5 +47,14 @@ public interface LineageAnalysisService {
      * @author: 李日红
      * @create: 2025/2/22 17:22
      */
-    List<SqlLineageTableNodeDto> retrieveNeo4jTableInfo(SqlLineageTableNodeParamsDto sqlLineageTableNodeParamsDto);
+    List<SqlLineageTableNodeDto> retrieveNeo4jTableInfo(SqlLineageSearchNodeParamsDto sqlLineageSearchNodeParamsDto);
+
+    /**
+     * @description: 根据参数查询字段维度的图数据库
+     * @param: sqlLineageSearchNodeParamsDto  查询dto
+     * @return: java.util.List<com.litiron.code.lineage.sql.dto.lineage.column.SqlLineageColumnNodeDto>
+     * @author: 李日红
+     * @create: 2025/4/17 20:59
+     */
+    List<SqlLineageColumnNodeDto> retrieveNeo4jColumnInfo(SqlLineageSearchNodeParamsDto sqlLineageSearchNodeParamsDto);
 }

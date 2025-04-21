@@ -1,18 +1,19 @@
 package com.litiron.code.lineage.sql.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.litiron.code.lineage.sql.common.BusinessException;
 import com.litiron.code.lineage.sql.common.Rest;
 import com.litiron.code.lineage.sql.constants.ExceptionCategoryConstant;
+import com.litiron.code.lineage.sql.dto.user.UserDto;
+import com.litiron.code.lineage.sql.dto.user.UserInfoUpdateParamsDto;
 import com.litiron.code.lineage.sql.dto.user.UserParamsDto;
 import com.litiron.code.lineage.sql.service.user.UserService;
+import com.litiron.code.lineage.sql.vo.user.UserVo;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author 李日红
@@ -55,8 +56,60 @@ public class UserController {
         }
     }
 
+    @GetMapping("/info")
+    public Rest<?> getUserInfo() {
+        try {
+            UserDto userDto = userService.getUserInfo();
+            return Rest.success(BeanUtil.copyProperties(userDto, UserVo.class));
+        } catch (BusinessException be) {
+            log.error("GetUserInfo error ", be);
+            return Rest.error(be.getMessage());
+        } catch (Exception e) {
+            log.error("GetUserInfo error ", e);
+            return Rest.error(ExceptionCategoryConstant.UNKNOWN_EXCEPTION);
+        }
+    }
+
+    @PostMapping("/updateInfo")
+    public Rest<?> updateInfo(@RequestBody UserInfoUpdateParamsDto infoUpdateParamsDto) {
+        try {
+            userService.updateInfo(infoUpdateParamsDto);
+            return Rest.success("更新信息成功");
+        } catch (BusinessException be) {
+            log.error("UpdateInfo error and params are {}", JSONUtil.toJsonStr(infoUpdateParamsDto), be);
+            return Rest.error(be.getMessage());
+        } catch (Exception e) {
+            log.error("UpdateInfo error and params are {}", JSONUtil.toJsonStr(infoUpdateParamsDto), e);
+            return Rest.error(ExceptionCategoryConstant.UNKNOWN_EXCEPTION);
+        }
+    }
+
+    @PostMapping("/updatePassword")
+    public Rest<?> updatePassword(@RequestBody UserInfoUpdateParamsDto infoUpdateParamsDto) {
+        try {
+            validatePasswordParams(infoUpdateParamsDto);
+            userService.updatePassword(infoUpdateParamsDto);
+            return Rest.success("更新密码成功");
+        } catch (BusinessException be) {
+            log.error("UpdatePassword error and params are {}", JSONUtil.toJsonStr(infoUpdateParamsDto), be);
+            return Rest.error(be.getMessage());
+        } catch (Exception e) {
+            log.error("UpdatePassword error and params are {}", JSONUtil.toJsonStr(infoUpdateParamsDto), e);
+            return Rest.error(ExceptionCategoryConstant.UNKNOWN_EXCEPTION);
+        }
+    }
+
+    private void validatePasswordParams(UserInfoUpdateParamsDto infoUpdateParamsDto) {
+        if (StrUtil.isEmpty(infoUpdateParamsDto.getNewPassword())) {
+            throw new BusinessException("新密码不能为空");
+        }
+        if (StrUtil.isEmpty(infoUpdateParamsDto.getOldPassword())) {
+            throw new BusinessException("旧密码不能为空");
+        }
+    }
+
     private void validateUserParams(UserParamsDto userParamsDto) {
-        if (StrUtil.isEmpty(userParamsDto.getUserName())) {
+        if (StrUtil.isEmpty(userParamsDto.getUsername())) {
             throw new BusinessException("用户名不能为空");
         }
         if (StrUtil.isEmpty(userParamsDto.getPassword())) {

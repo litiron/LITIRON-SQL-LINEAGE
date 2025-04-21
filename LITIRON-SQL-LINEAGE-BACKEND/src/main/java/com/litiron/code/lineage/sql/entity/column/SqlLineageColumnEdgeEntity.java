@@ -23,5 +23,5 @@ public class SqlLineageColumnEdgeEntity {
     private String businessId;
 
     @TargetNode
-    private SqlLineageColumnNodeEntity sqlLineageColumnNodeEntity;
+    private SqlLineageColumnNodeEntity sqlLineageColumnNode;
 }

@@ -8,7 +8,7 @@ package com.litiron.code.lineage.sql.service.langchain.tools;
 
 import cn.hutool.json.JSONUtil;
 import com.litiron.code.lineage.sql.constants.DatabaseConnectionConstant;
-import com.litiron.code.lineage.sql.dto.lineage.SqlLineageTableNodeParamsDto;
+import com.litiron.code.lineage.sql.dto.lineage.SqlLineageSearchNodeParamsDto;
 import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableEdgeDto;
 import com.litiron.code.lineage.sql.dto.lineage.table.SqlLineageTableNodeDto;
 import com.litiron.code.lineage.sql.entity.database.DatabaseConnectionEntity;
@@ -103,9 +103,9 @@ public class DatabaseContentTools {
     @Tool("获取表的血缘关系，返回关联表结构及字段信息")
     public String findRelevantLineage(Map<String, String> tableStruct) {
         List<Map<String, Object>> lineageInfo = new ArrayList<>();
-        SqlLineageTableNodeParamsDto sqlLineageTableNodeParamsDto = buildSqlLineageTableNodeParamsDto(tableStruct);
+        SqlLineageSearchNodeParamsDto sqlLineageSearchNodeParamsDto = buildSqlLineageTableNodeParamsDto(tableStruct);
         // 获取原始血缘关系
-        List<SqlLineageTableNodeDto> relationships = lineageAnalysisService.retrieveNeo4jTableInfo(sqlLineageTableNodeParamsDto);
+        List<SqlLineageTableNodeDto> relationships = lineageAnalysisService.retrieveNeo4jTableInfo(sqlLineageSearchNodeParamsDto);
         if (relationships.isEmpty()) {
             return "该表没有血缘关系，不需要做表连接";
         }
@@ -121,13 +121,13 @@ public class DatabaseContentTools {
         return JSONUtil.toJsonStr(lineageInfo);
     }
 
-    private SqlLineageTableNodeParamsDto buildSqlLineageTableNodeParamsDto(Map<String, String> tableStruct) {
-        SqlLineageTableNodeParamsDto sqlLineageTableNodeParamsDto = new SqlLineageTableNodeParamsDto();
-        sqlLineageTableNodeParamsDto.setTableName(tableStruct.get("table_name"));
-        sqlLineageTableNodeParamsDto.setSchemaName(tableStruct.get("schema_name"));
-        sqlLineageTableNodeParamsDto.setDatabaseName(tableStruct.get("database_name"));
-        sqlLineageTableNodeParamsDto.setId(tableStruct.get("connection_id"));
-        return sqlLineageTableNodeParamsDto;
+    private SqlLineageSearchNodeParamsDto buildSqlLineageTableNodeParamsDto(Map<String, String> tableStruct) {
+        SqlLineageSearchNodeParamsDto sqlLineageSearchNodeParamsDto = new SqlLineageSearchNodeParamsDto();
+        sqlLineageSearchNodeParamsDto.setTableName(tableStruct.get("table_name"));
+        sqlLineageSearchNodeParamsDto.setSchemaName(tableStruct.get("schema_name"));
+        sqlLineageSearchNodeParamsDto.setDatabaseName(tableStruct.get("database_name"));
+        sqlLineageSearchNodeParamsDto.setId(tableStruct.get("connection_id"));
+        return sqlLineageSearchNodeParamsDto;
     }
 
     private float[] embeddingToFloatArray(Embedding embedding) {

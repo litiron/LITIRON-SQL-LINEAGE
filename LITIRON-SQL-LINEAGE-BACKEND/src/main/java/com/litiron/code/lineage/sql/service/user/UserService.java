@@ -1,5 +1,7 @@
 package com.litiron.code.lineage.sql.service.user;
 
+import com.litiron.code.lineage.sql.dto.user.UserDto;
+import com.litiron.code.lineage.sql.dto.user.UserInfoUpdateParamsDto;
 import com.litiron.code.lineage.sql.dto.user.UserParamsDto;
 
 /**
@@ -25,4 +27,30 @@ public interface UserService {
      * @create: 2025/3/27 20:10
      */
     String login(UserParamsDto userParamsDto);
+
+    /**
+     * @description: 获取用户信息
+     * @return: com.litiron.code.lineage.sql.dto.user.UserDto
+     * @author: 李日红
+     * @create: 2025/4/18 15:23
+     */
+    UserDto getUserInfo();
+
+    /**
+     * @description: 用户更新个人信息
+     * @param: infoUpdateParamsDto 更新信息参数
+     * @return: void
+     * @author: 李日红
+     * @create: 2025/4/18 15:57
+     */
+    void updateInfo(UserInfoUpdateParamsDto infoUpdateParamsDto);
+
+    /**
+     * @description: 修改密码
+     * @param: infoUpdateParamsDto 密码参数 dto
+     * @return: void
+     * @author: 李日红
+     * @create: 2025/4/18 16:38
+     */
+    void updatePassword(UserInfoUpdateParamsDto infoUpdateParamsDto);
 }

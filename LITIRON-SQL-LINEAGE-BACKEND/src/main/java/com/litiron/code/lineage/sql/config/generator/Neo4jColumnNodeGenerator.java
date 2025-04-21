@@ -14,7 +14,7 @@ public class Neo4jColumnNodeGenerator implements IdGenerator<String> {
     @Override
     public String generateId(String primaryLabel, Object entity) {
         SqlLineageColumnNodeEntity sqlLineageColumnNodeEntity = (SqlLineageColumnNodeEntity) entity;
-        return TableNodeUtils.generateKey(sqlLineageColumnNodeEntity.getDatabaseName(), sqlLineageColumnNodeEntity.getSchemaName(),
+        return TableNodeUtils.generateKey(sqlLineageColumnNodeEntity.getConnectionIp(), sqlLineageColumnNodeEntity.getDatabaseName(), sqlLineageColumnNodeEntity.getSchemaName(),
                 sqlLineageColumnNodeEntity.getTableName(), sqlLineageColumnNodeEntity.getColumnName());
     }
 }
